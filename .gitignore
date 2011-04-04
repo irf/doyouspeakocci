@@ -1,0 +1,6 @@
+*.pyc
+*.html
+build/
+.settings/
+.pydevproject
+.project

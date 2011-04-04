@@ -1,0 +1,9 @@
+
+TODO items:
+
+* refactor tests
+  * create routines for basic operations: 
+           do_post(category, attr, links), do_get, do_put do_delete()
+  * implement basic auth mechanisms
+* register in pypi
+* move to gridforge
