@@ -292,7 +292,7 @@ def test_create_kinds(url, heads):
     post_heads['Category'] = 'compute;scheme="http://schemas.ogf.org/occi/infrastructure#"'
     http = httplib2.Http()
     response, content = http.request(url, 'POST', headers = post_heads)
-    if not response['status'] == '200' or response['status'] == '202':
+    if not response['status'] is '200' or response['status'] is '201':
         logging.warn('Creation failed - this might be okay - please examine output! ' + repr(response) + ' ' + content)
         raise AttributeError("Test did no run completly!")
     try:
@@ -305,19 +305,19 @@ def test_create_kinds(url, heads):
     put_heads['X-OCCI-Attribute'] = 'occi.compute.hostname=foo'
     http = httplib2.Http()
     response, content = http.request(loc, 'PUT', headers = put_heads)
-    if not response['status'] == '200' or response['status'] == '202':
+    if not response['status'] == '200' or response['status'] == '201':
         raise AttributeError('Unable to do an update on the resource: ' + loc)
 
     # GET
     http = httplib2.Http()
     response, content = http.request(loc, 'GET', headers = heads)
-    if not response['status'] == '200' or response['status'] == '202':
+    if not response['status'] == '200' or response['status'] == '201':
         raise AttributeError('Unable to do retrieve the resource: ' + loc)
 
     # DELETE
     http = httplib2.Http()
     response, content = http.request(loc, 'DELETE', headers = heads)
-    if not response['status'] == '200' or response['status'] == '202':
+    if not response['status'] == '200' or response['status'] == '201':
         raise AttributeError('Unable to do delete the resource: ' + loc)
 
 def test_mixins(url, heads):
@@ -327,9 +327,9 @@ def test_mixins(url, heads):
     heads['Content-Type'] = 'text/occi'
 
     put_heads = heads.copy()
-    put_heads['Category'] = 'my_stuff;scheme="http://example.com/occi#";location=/my_stuff/'
+    put_heads['Category'] = 'my_stuff;scheme="http://example.com/occi#";location="/my_stuff/"'
     http = httplib2.Http()
-    response, content = http.request(url + '/-/', 'PUT', headers = put_heads)
+    response, content = http.request(url + '/-/', 'POST', headers = put_heads)
     if not response['status'] == '200' or response['status'] == '202':
         raise AttributeError('Unable to create a user-defined mixin. Response: ' + repr(response) + content)
 
@@ -356,7 +356,7 @@ def test_links(url, heads):
     compute_heads['Category'] = 'compute;scheme="http://schemas.ogf.org/occi/infrastructure#"'
     http = httplib2.Http()
     response, content = http.request(url, 'POST', headers = compute_heads)
-    if not response['status'] == '200' or response['status'] == '202':
+    if not response['status'] == '200' or response['status'] == '201':
         logging.warn('Creation failed - this might be okay - please examine output! ' + repr(response) + content)
         raise AttributeError("Test did no run completly!")
     compute_loc = response['location']
@@ -365,7 +365,7 @@ def test_links(url, heads):
     network['Category'] = 'network;scheme="http://schemas.ogf.org/occi/infrastructure#"'
     http = httplib2.Http()
     response, content = http.request(url, 'POST', headers = network)
-    if not response['status'] == '200' or response['status'] == '202':
+    if not response['status'] == '200' or response['status'] == '201':
         logging.warn('Creation failed - this might be okay - please examine output! ' + repr(response) + content)
         raise AttributeError("Test did no run completly!")
     network_loc = response['location']
@@ -376,7 +376,7 @@ def test_links(url, heads):
     link['X-OCCI-Attribute'] = 'source=' + compute_loc + ',target=' + network_loc
     http = httplib2.Http()
     response, content = http.request(url, 'POST', headers = link)
-    if not response['status'] == '200' or response['status'] == '202':
+    if not response['status'] == '200' or response['status'] == '201':
         logging.warn('Creation failed - this might be okay - please examine output! ' + repr(response) + content)
         raise AttributeError("Test did no run completly!")
     link_loc = response['location']
@@ -400,7 +400,7 @@ def test_actions(url, heads):
     compute_heads['Category'] = 'compute;scheme="http://schemas.ogf.org/occi/infrastructure#"'
     http = httplib2.Http()
     response, content = http.request(url, 'POST', headers = compute_heads)
-    if not response['status'] == '200' or response['status'] == '202':
+    if not response['status'] == '200' or response['status'] == '201':
         logging.warn('Creation failed - this might be okay - please examine output!' + repr(response) + content)
         raise AttributeError("Test did no run completly!")
     compute_loc = response['location']
@@ -433,7 +433,8 @@ def test_filter(url, heads):
     compute_heads['Category'] = 'compute;scheme="http://schemas.ogf.org/occi/infrastructure#"'
     http = httplib2.Http()
     response, content = http.request(url, 'POST', headers = compute_heads)
-    if not response['status'] == '200' or response['status'] == '202':
+    if not response['status'] == '200' or response['status'] == '201':
+        logging.warn(response['status'])
         logging.warn('Creation failed - this might be okay - please examine output!' + repr(response) + content)
         raise AttributeError("Test did no run completly!")
     compute_loc = response['location']
@@ -442,7 +443,7 @@ def test_filter(url, heads):
     network['Category'] = 'network;scheme="http://schemas.ogf.org/occi/infrastructure#"'
     http = httplib2.Http()
     response, content = http.request(url, 'POST', headers = network)
-    if not response['status'] == '200' or response['status'] == '202':
+    if not response['status'] == '200' or response['status'] == '201':
         logging.warn('Creation failed - this might be okay - please examine output!' + repr(response) + content)
         raise AttributeError("Test did no run completly!")
     network_loc = response['location']
@@ -475,7 +476,7 @@ def test_location(url, heads):
     compute_heads['Category'] = 'compute;scheme="http://schemas.ogf.org/occi/infrastructure#"'
     http = httplib2.Http()
     response, content = http.request(url, 'POST', headers = compute_heads)
-    if not response['status'] == '200' or response['status'] == '202':
+    if not response['status'] == '200' or response['status'] == '201':
         logging.warn('Creation failed - this might be okay - please examine output!' + repr(response) + content)
         raise AttributeError("Test did no run completly!")
     compute_loc = response['location']
@@ -483,8 +484,8 @@ def test_location(url, heads):
     put_heads = heads.copy()
     put_heads['Category'] = 'my_stuff;scheme="http://example.com/occi#";location=/my_stuff/'
     http = httplib2.Http()
-    response, content = http.request(url + '/-/', 'PUT', headers = put_heads)
-    if not response['status'] == '200' or response['status'] == '202':
+    response, content = http.request(url + '/-/', 'POST', headers = put_heads)
+    if not response['status'] == '200' or response['status'] == '201':
         raise AttributeError('Unable to create a user-defined mixin. Response: ' + repr(response) + content)
 
     put_heads = heads.copy()
@@ -523,10 +524,11 @@ def test_syntax(url, heads):
     url = url + '/-/'
     http = httplib2.Http()
     response, content = http.request(url, 'GET', headers = heads)
-    cat_rend = content.split('\n')[0].strip()
+    cat_rend = content.split('\n')[1].strip()
 
     cat_rend = cat_rend[10:]
     p = re.compile(regex)
+    print cat_rend, p.match(cat_rend)
     m = p.match(cat_rend)
     if m is None:
         raise AttributeError('There is an error in the syntax for rendering text/plain. Category should be setup like <term>;scheme="<url>";class=[kind,action,mixin]')

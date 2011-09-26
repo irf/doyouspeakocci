@@ -27,8 +27,7 @@ try:
     N, E, W, S, Tk, LEFT, FALSE
 except ImportError:
     logging.warn("TK GUI will not be available...")
-    class Toplevel(object):
-        pass
+    exit(1)
 
 '''
 A GUI test runner...
@@ -77,6 +76,7 @@ class GUIRunner(Toplevel):
         text = Label(frame, text = 'OCCI service URL:')
         text.grid(column = 0, row = 0, **self.paddingArgs)
 
+        # self.url.set('http://fjjutraa.joyent.us:8888')
         self.url.set('http://localhost:8888')
         entry = Entry(frame, width = 25, textvariable = self.url)
         entry.grid(column = 1, row = 0, **self.paddingArgs)
