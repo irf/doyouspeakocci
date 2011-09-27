@@ -22,6 +22,7 @@
 import httplib2
 import logging
 
+
 def test_query_interface(url):
     '''
     Testing the Query Interface as described in section 3.4.1...
@@ -38,7 +39,7 @@ def test_query_interface(url):
     http = httplib2.Http()
 
     heads = {
-        'Content-type':'text/occi',
+        'Content-type': 'text/occi',
         'Accept': 'text/occi',
         'Category': 'my_stuff; scheme="http://example.com/occi/my_stuff#"; class="mixin"; rel="http://example.com/occi/something_else#mixin"; location="/my_stuff/"'
     }
@@ -51,7 +52,7 @@ def test_query_interface(url):
     http = httplib2.Http()
 
     heads = {
-        'Content-type':'text/occi',
+        'Content-type': 'text/occi',
         'Accept': 'text/occi',
         'Category': 'my_stuff; scheme="http://example.com/occi/my_stuff#"; class="mixin";'
     }
@@ -149,7 +150,7 @@ def test_versioning(url):
 
     response, content = http.request(url + '/', 'GET')
     if response.get('server').find('OCCI/1.1') == -1:
-        msg += 'Server does not correctly expose version OCCI/1.1. Server responded: ' + reponse.get('server')
+        msg += 'Server does not correctly expose version OCCI/1.1. Server responded: ' + response.get('server')
 
     if msg is not '':
         raise AttributeError(msg)
@@ -186,7 +187,7 @@ def test_occi_infrastructure(url):
     '''
     # TODO
     msg = ''
-    
+
     if msg is not '':
         raise AttributeError(msg)
     return 'OK'
@@ -195,15 +196,3 @@ def test_occi_infrastructure(url):
 if __name__ == '__main__':
 
     URL = 'http://localhost:8888'
-
-    FORMAT = '%(message)s'
-    logging.basicConfig(format=FORMAT, level=logging.DEBUG)
-
-    for item in dir():
-        if item.find('test_') != -1:
-            func = locals()[item]
-            try:
-                logging.info("{0:80s} {1:6s}".format(func.__doc__.strip(), func(URL)))
-            except AttributeError as error:
-                logging.error(error)
-                logging.info("{0:80s} {1:6s}".format(func.__doc__.strip(), 'FAILED'))
