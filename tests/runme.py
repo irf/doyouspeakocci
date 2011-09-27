@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 #
@@ -23,6 +23,7 @@ import getopt
 import logging
 import sys
 import test_occi_11
+import textwrap
 
 try:
     from Tkinter import Toplevel, Frame, LabelFrame, Label, StringVar, \
@@ -73,21 +74,25 @@ class TkRunner(Toplevel):
         top = Frame(self.master)
         top.grid(**self.paddingArgs)
 
-        frame = Frame(top)
-        frame.grid(column=0, row=0, columnspan=2)
+        #======================================================================
+        # Top frame
+        #======================================================================
 
-        text = Label(frame, text='OCCI service URL:')
+        info_frame = Frame(top)
+        info_frame.grid(column=0, row=0)
+
+        text = Label(info_frame, text='OCCI service URL:')
         text.grid(column=0, row=0, **self.paddingArgs)
 
         # self.url.set('http://fjjutraa.joyent.us:8888')
         self.url.set('http://localhost:8888')
-        entry = Entry(frame, width=25, textvariable=self.url)
+        entry = Entry(info_frame, width=25, textvariable=self.url)
         entry.grid(column=1, row=0, **self.paddingArgs)
 
-        go = Button(frame, text='Go', command=self.run_tests)
+        go = Button(info_frame, text='Go', command=self.run_tests)
         go.grid(column=2, row=0, **self.paddingArgs)
 
-        reset = Button(frame, text='Reset', command=self.reset)
+        reset = Button(info_frame, text='Reset', command=self.reset)
         reset.grid(column=3, row=0, **self.paddingArgs)
 
         #======================================================================
@@ -96,12 +101,12 @@ class TkRunner(Toplevel):
 
         self.test_frame = LabelFrame(top, borderwidth=2, relief='groove',
                                      text='Tests')
-        self.test_frame.grid(column=0, row=1, columnspan=2, **self.paddingArgs)
+        self.test_frame.grid(row=1, **self.paddingArgs)
 
         i = 0
         for item in self._get_tests().keys():
             label = Label(self.test_frame, text=item)
-            label.grid(column=0, row=i, sticky=W, **self.paddingArgs)
+            label.grid(row=i, sticky=W, **self.paddingArgs)
 
             label2 = Label(self.test_frame, text='...')
             label2.grid(column=1, row=i, sticky=N + E + W + S,
@@ -113,14 +118,14 @@ class TkRunner(Toplevel):
         # Bottom
         #======================================================================
 
-        note = 'NOTE: Passing all tests only indicates that the service\n \
-                you are testing is OCCI compliant - IT DOES NOT GUARANTE IT!'
+        note = 'NOTE: Passing all tests only indicates that the service\n'
+        note += 'you are testing is OCCI compliant - IT DOES NOT GUARANTEE IT!'
 
         label = Label(top, text=note)
-        label.grid(column=0, row=2, columnspan=2, **self.paddingArgs)
+        label.grid(row=2, **self.paddingArgs)
 
         quit_button = Button(top, text='Quit', command=self.quit)
-        quit_button.grid(column=1, row=3, sticky=E, **self.paddingArgs)
+        quit_button.grid(row=3, sticky=E, **self.paddingArgs)
 
     def run_tests(self):
         url = self.url.get()
@@ -148,8 +153,6 @@ class TkRunner(Toplevel):
             i += 1
 
     def reset(self):
-        self.test_frame.grid_columnconfigure(1, {'uniform': 100})
-
         i = 0
         for item in self._get_tests().keys():
             label = Label(self.test_frame, text=item)
@@ -183,26 +186,34 @@ class TextRunner(object):
 
         print('\nExamining OCCI service at URL: ' + url)
         print('\nNOTE: Passing all tests only indicates that the service')
-        print('you are testing is OCCI compliant - IT DOES NOT GUARANTE IT!\n')
+        print('you are testing is OCCI compliant - IT DOES NOT GUARANTEE IT!\n')
 
         self.run_tests(url)
+
+        print('\n')
 
     def run_tests(self, url):
         '''
         Run all the tests.
         '''
+
         for item in dir(test_occi_11):
             if item.find('test_') != -1:
-                # func = locals()[item]
                 func = getattr(test_occi_11, item)
+                desc = textwrap.wrap(func.__doc__.strip(), width=90)
 
                 try:
-                    print("{0:80s} {1:6s}".format(func.__doc__.strip(),
-                                                  func(url)))
+                    if len(desc) > 1:
+                        for item in desc[0:len(desc) - 1]:
+                            print item
+                    result = func(url)
+                    print('{0:90s} {1:6s}'.format(desc.pop(), result))
                 except AttributeError as error:
+                    if len(desc) > 1:
+                        for item in desc[0:len(desc) - 1]:
+                            print item
                     logging.error(error)
-                    print("{0:80s} {1:6s}".format(func.__doc__.strip(),
-                                                  'FAILED'))
+                    print("{0:90s} {1:6s}".format(desc.pop(), 'FAILED'))
 
 if __name__ == '__main__':
     try:
@@ -217,7 +228,7 @@ if __name__ == '__main__':
 
     for o, a in opts:
         if o in ("-h", "--help"):
-            print ('Usage: test_occi.py url=<URL> or test_occi.py --gui')
+            print ('Usage: test_occi.py [url=<URL>] or test_occi.py --gui')
             sys.exit()
         elif o in ("-u", "--url"):
             url = a
