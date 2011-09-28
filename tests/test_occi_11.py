@@ -56,6 +56,11 @@ def test_query_interface(url):
     if len(response['category'].split(',')) > 1:
         msg_list.append('The filter mechanism does not work - should only contain the compute category definition - but was: ' + str(response['category']))
 
+    # remove the mixin first to avoid conflicts
+    post_heads = heads.copy()
+    post_heads['Category'] = 'my_stuff; scheme="http://example.com/occi/my_stuff#"'
+    response, content = http.request(url + '/.well-known/org/ogf/occi/-/', 'DELETE', headers=post_heads)
+
     # adding a mixin definition
     post_heads = heads.copy()
     post_heads['Category'] = 'my_stuff; scheme="http://example.com/occi/my_stuff#"; class="mixin"; rel="http://example.com/occi/something_else#mixin"; location="/my_stuff/"'
@@ -96,7 +101,7 @@ def test_operations_on_mixins_or_kinds(url):
 
     get_heads = {'Accept': 'text/uri-list'}
     response, content = http.request(url + '/compute/', 'GET', headers=get_heads)
-    for item in response1['x-occi-location'].split(', '):
+    for item in response1['x-occi-location'].split(',\s'):
         if item not in content.split('\n'):
             msg_list.append('X-OCCI-Location and uri-list do not return the same values for the compute collection...')
 
@@ -204,8 +209,8 @@ def test_operations_on_resource_instances(url):
         loc = response['location']
     elif response.status == 200:
         logging.warn('Seems like OCCI server responded with 200...not 201 and location...')
-        response, content = http.request(url + '/compute/', 'GET', headers=get_heads)
-        loc = response['x-occi-location']
+        response, content = http.request(url + '/compute/', 'GET', headers=heads)
+        loc = response['x-occi-location'].split(',')[0].strip()
     else:
         msg_list.append('Could not create compute kind...')
 
@@ -231,19 +236,25 @@ def test_operations_on_resource_instances(url):
         msg_list.append('Unable to do an update on the resource: ' + loc)
 
     # PUT create
+    put_url = url + '/123'
     put_heads = heads.copy()
     put_heads['Category'] = 'compute;scheme="http://schemas.ogf.org/occi/infrastructure#"'
     put_heads['X-OCCI-Attribute'] = 'example.test="foo"'
-    response, content = http.request(url + '/123', 'PUT', headers=put_heads)
-    if not response.status in [200, 201]:
-        msg_list.append('Failed to put a new compute resource at /123/. response: ' + repr(response) + content)
+    response, content = http.request(put_url, 'PUT', headers=put_heads)
+    # RN: A server is allowed to refuse the request. #3.4.4 footnote 6.
+    if response.status == 400:
+        logging.warn('Server refused PUT /123, this is OK according to section 3.4.4')
+        put_url = loc
+    elif not response.status in [200, 201]:
+        msg_list.append('Failed to put a new compute resource at /123, response: ' + repr(response) + content)
 
     # PUT for full update
     put_heads = heads.copy()
     put_heads['Category'] = 'compute;scheme="http://schemas.ogf.org/occi/infrastructure#"'
-    response, content = http.request(url + '/123', 'PUT', headers=put_heads)
+    put_heads['X-OCCI-Attribute'] = 'occi.core.title="My Compute instance"'
+    response, content = http.request(put_url, 'PUT', headers=put_heads)
     if not response.status == 200:
-        msg_list.append('Failed to do a full update on compute resource at /123/. response: ' + repr(response) + content)
+        msg_list.append('Failed to do a full update on compute resource at /123, response: ' + repr(response) + content)
 
     # GET
     response, content = http.request(loc, 'GET', headers=heads)
@@ -253,10 +264,11 @@ def test_operations_on_resource_instances(url):
     # DELETE
     response, content = http.request(loc, 'DELETE', headers=heads)
     if not response.status == 200:
-        msg_list.append('Unable to do delete the resource: ' + loc)
-    response, content = http.request(url + '/123', 'DELETE', headers=heads)
-    if not response.status == 200:
-        msg_list.append('Unable to do delete the resource: ' + loc)
+        msg_list.append('Unable to delete the resource: ' + loc)
+    if loc != put_url:
+        response, content = http.request(put_url, 'DELETE', headers=heads)
+        if not response.status == 200:
+            msg_list.append('Unable to do delete the resource: ' + loc)
 
     if msg_list:
         raise TestFailure(msg_list)
@@ -275,7 +287,7 @@ def test_handling_link_instances(url):
     compute_heads = heads.copy()
     compute_heads['Category'] = 'compute;scheme="http://schemas.ogf.org/occi/infrastructure#"'
     response, content = http.request(url, 'POST', headers=compute_heads)
-    if response.status != 201:
+    if 'location' not in response and response.status not in (201, 200):
         logging.warn('Creation failed - this might be okay - please examine output! ' + repr(response) + content)
         logging.warn('Test needs to be updated to discover location by doing a GET on /compute/')
         return 'UNDEFINED'
@@ -412,18 +424,21 @@ def test_content_type_and_accept_headers(url):
     http = httplib2.Http()
 
     response, content = http.request(url, 'GET', headers=heads)
-    if not response['content-type'] == 'text/plain':
+    content_type = response.get('content-type')
+    if content_type: content_type = content_type.split(';')[0].strip()
+    if not content_type == 'text/plain':
         msg_list.append('When requesting text/plain - The Content-type text/plain should be exposed by the server.')
 
     heads = {'Accept': 'text/occi'}
     response, content = http.request(url, 'GET', headers=heads)
-    if not response['content-type'] == 'text/occi':
+    content_type = response.get('content-type')
+    if content_type: content_type = content_type.split(';')[0].strip()
+    if not content_type == 'text/occi':
         msg_list.append('When requesting text/occi - The Content-type text/occi should be exposed by the server.')
 
     if msg_list:
         raise TestFailure(msg_list)
     return 'OK'
-
 
 def test_rfc5785_compliance(url):
     '''

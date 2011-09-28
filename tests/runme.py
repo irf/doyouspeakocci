@@ -209,7 +209,7 @@ class TextRunner(object):
                             print item
                     result = func(url)
                     print('{0:90s} {1:6s}'.format(desc.pop(), result))
-                except TestFailure, e:
+                except (TestFailure, AttributeError) as e:
                     if len(desc) > 1:
                         for item in desc[0:len(desc) - 1]:
                             print item
