@@ -368,9 +368,9 @@ def test_syntax(url):
     regex = r'\w+; \bscheme=[a-z:./#"]*; \bclass="(?:action|kind|mixin)"'
 
     heads = {'Accept': 'text/plain'}
-    url = url + '/-/'
+    discovery_url = url + '/-/'
     http = httplib2.Http()
-    response, content = http.request(url, 'GET', headers=heads)
+    response, content = http.request(discovery_url, 'GET', headers=heads)
     cat_rend = content.split('\n')[1].strip()
 
     cat_rend = cat_rend[10:]
@@ -381,12 +381,50 @@ def test_syntax(url):
         msg_list.append('There is an error in the syntax for rendering text/plain. Category should be setup like <term>;scheme="<url>";class=[kind,action,mixin]')
 
     heads['Accept'] = 'text/occi'
-    response, content = http.request(url, 'GET', headers=heads)
+    response, content = http.request(discovery_url, 'GET', headers=heads)
     cat_rend = response['category'].strip()
     p = re.compile(regex)
     m = p.match(cat_rend)
     if m is None:
         msg_list.append('There is an error in the syntax for rendering text/occi. Category should be setup like <term>;scheme="<url>";class=[kind,action,mixin]')
+
+    # Test escaping of quotes
+    post_heads = {'Content-Type': 'text/occi'}
+    post_heads['Category'] = 'compute;scheme="http://schemas.ogf.org/occi/infrastructure#"'
+    post_heads['X-OCCI-Attribute'] = 'occi.compute.memory=3.6, ' + \
+            'occi.core.title="How\'s your quotes escaping? \\", occi.compute.memory=1.0"'
+    response, content = http.request(url, 'POST', headers=post_heads)
+    if not response.get('location') or response.status not in (200, 201):
+        msg_list.append('Failed to create a Compute instance with X-OCCI-Attribute: %s' %
+                post_heads['X-OCCI-Attribute'])
+        raise TestFailure(msg_list)
+    compute_loc = response.get('location')
+
+    response, content = http.request(compute_loc, 'GET', headers={'Accept': 'text/plain'})
+    if not response.status == 200:
+        msg_list.append('Unable to retrieve the resource: ' + compute_loc)
+    # If memory=1.0 quote parsing failed, should be 3.6
+    found=False
+    for line in content.split('\n'):
+        l = line.split(':', 1)
+        if len(l) < 2: continue
+        header = l[0].strip()
+        value = l[1].strip()
+        if header.lower() != 'x-occi-attribute':
+            continue
+        l = value.split('=', 1)
+        if len(l) < 2: continue
+        if l[0] == 'occi.compute.memory':
+            memory = l[1].strip('\s"')
+            try:
+                memory = float(memory)
+            except ValueError:
+                break
+            else:
+                if memory == 3.6:
+                    found = True
+    if not found:
+        msg_list.append('Escaping of quotes is not parsed correctly')
 
     if msg_list:
         raise TestFailure(msg_list)
@@ -439,6 +477,7 @@ def test_content_type_and_accept_headers(url):
     if msg_list:
         raise TestFailure(msg_list)
     return 'OK'
+
 
 def test_rfc5785_compliance(url):
     '''
