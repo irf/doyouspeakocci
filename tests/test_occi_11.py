@@ -56,10 +56,14 @@ def test_query_interface(url):
     if len(response['category'].split(',')) > 1:
         msg_list.append('The filter mechanism does not work - should only contain the compute category definition - but was: ' + str(response['category']))
 
-    # remove the mixin first to avoid conflicts
-    post_heads = heads.copy()
-    post_heads['Category'] = 'my_stuff; scheme="http://example.com/occi/my_stuff#"'
-    response, content = http.request(url + '/.well-known/org/ogf/occi/-/', 'DELETE', headers=post_heads)
+    # remove the mixin if it exists first to avoid conflicts
+    get_headers = heads.copy()
+    get_headers['Category'] = 'my_stuff; scheme="http://example.com/occi/my_stuff#"'
+    response, content = http.request(url + '/.well-known/org/ogf/occi/-/', 'GET', headers=get_headers)
+    if response.status in [200]:
+        del_heads = heads.copy()
+        del_heads['Category'] = 'my_stuff; scheme="http://example.com/occi/my_stuff#"'
+        response, content = http.request(url + '/.well-known/org/ogf/occi/-/', 'DELETE', headers=del_heads)
 
     # adding a mixin definition
     post_heads = heads.copy()
@@ -101,8 +105,9 @@ def test_operations_on_mixins_or_kinds(url):
 
     get_heads = {'Accept': 'text/uri-list'}
     response, content = http.request(url + '/compute/', 'GET', headers=get_heads)
-    for item in response1['x-occi-location'].split(',\s'):
-        if item not in content.split('\n'):
+    
+    for item in response1['x-occi-location'].split(','):
+        if item.strip() not in content.split('\n'):
             msg_list.append('X-OCCI-Location and uri-list do not return the same values for the compute collection...')
 
     # trigger action on collection
@@ -405,6 +410,7 @@ def test_syntax(url):
         msg_list.append('Unable to retrieve the resource: ' + compute_loc)
     # If memory=1.0 quote parsing failed, should be 3.6
     found=False
+    
     for line in content.split('\n'):
         l = line.split(':', 1)
         if len(l) < 2: continue
