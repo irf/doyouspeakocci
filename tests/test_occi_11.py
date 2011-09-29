@@ -105,7 +105,7 @@ def test_operations_on_mixins_or_kinds(url):
 
     get_heads = {'Accept': 'text/uri-list'}
     response, content = http.request(url + '/compute/', 'GET', headers=get_heads)
-    
+
     for item in response1['x-occi-location'].split(','):
         if item.strip() not in content.split('\n'):
             msg_list.append('X-OCCI-Location and uri-list do not return the same values for the compute collection...')
@@ -313,7 +313,6 @@ def test_handling_link_instances(url):
     response, content = http.request(url, 'POST', headers=link)
     if response.status not in [200, 201]:
         msg_list.append('Creation failed -  please examine output! ' + repr(response) + content)
-        logging.error(msg)
     link_loc = response['location']
 
     # check if links has source, target attributes
@@ -409,8 +408,8 @@ def test_syntax(url):
     if not response.status == 200:
         msg_list.append('Unable to retrieve the resource: ' + compute_loc)
     # If memory=1.0 quote parsing failed, should be 3.6
-    found=False
-    
+    found = False
+
     for line in content.split('\n'):
         l = line.split(':', 1)
         if len(l) < 2: continue
