@@ -23,6 +23,7 @@ import getopt
 import logging
 import sys
 import test_occi_11
+from test_occi_11 import TestFailure
 import textwrap
 
 try:
@@ -208,11 +209,11 @@ class TextRunner(object):
                             print item
                     result = func(url)
                     print('{0:90s} {1:6s}'.format(desc.pop(), result))
-                except AttributeError as error:
+                except (TestFailure, AttributeError) as e:
                     if len(desc) > 1:
                         for item in desc[0:len(desc) - 1]:
                             print item
-                    logging.error(error)
+                    logging.error(e)
                     print("{0:90s} {1:6s}".format(desc.pop(), 'FAILED'))
 
 if __name__ == '__main__':
@@ -228,7 +229,7 @@ if __name__ == '__main__':
 
     for o, a in opts:
         if o in ("-h", "--help"):
-            print ('Usage: test_occi.py [url=<URL>] or test_occi.py --gui')
+            print ('Usage: test_occi.py [--url=<URL>] or test_occi.py --gui')
             sys.exit()
         elif o in ("-u", "--url"):
             url = a
