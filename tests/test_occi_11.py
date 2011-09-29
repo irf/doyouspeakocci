@@ -40,7 +40,7 @@ def test_query_interface(url):
     msg_list = []
     http = httplib2.Http()
     heads = {'Content-type': 'text/occi',
-             'Accept': 'text/occi'}
+             'Accept': 'text/plain'}
 
     # retrieval of all kinds, actions and mixins
     response, content = http.request(url + '/.well-known/org/ogf/occi/-/', 'GET')
@@ -49,6 +49,7 @@ def test_query_interface(url):
 
     # filter based on category
     get_headers = heads.copy()
+    get_headers['Accept'] = 'text/occi'
     get_headers['Category'] = 'compute; scheme="http://schemas.ogf.org/occi/infrastructure#"'
     response, content = http.request(url + '/.well-known/org/ogf/occi/-/', 'GET', headers=get_headers)
     if not response.status in [200]:
