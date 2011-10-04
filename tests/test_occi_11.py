@@ -22,6 +22,7 @@
 import httplib2
 import logging
 import re
+import uuid
 
 
 class TestFailure(Exception):
@@ -98,12 +99,13 @@ def test_operations_on_mixins_or_kinds(url):
     http = httplib2.Http()
     heads = {'Content-Type': 'text/occi',
              'Accept': 'text/occi'}
+    unique_hostname = "foo %s bar" % uuid.uuid4()
 
     # POST some compute instances
     post_heads = heads.copy()
     post_heads['Category'] = 'compute;scheme="http://schemas.ogf.org/occi/infrastructure#"'
     response, content = http.request(url, 'POST', headers=post_heads)
-    post_heads['X-OCCI-Attribute'] = 'occi.compute.hostname="foo"'
+    post_heads['X-OCCI-Attribute'] = 'occi.compute.hostname="%s"' % unique_hostname
     response, content = http.request(url, 'POST', headers=post_heads)
 
     # get them as described in section 3.4.2 - text/plain and text/uri-list should contain the same infos...
@@ -112,8 +114,9 @@ def test_operations_on_mixins_or_kinds(url):
     get_heads = {'Accept': 'text/uri-list'}
     response, content = http.request(url + '/compute/', 'GET', headers=get_heads)
 
+    content = [item.strip() for item in content.split('\n')]
     for item in response1['x-occi-location'].split(','):
-        if item.strip() not in content.split('\n'):
+        if item.strip() not in content:
             msg_list.append('X-OCCI-Location and uri-list do not return the same values for the compute collection...')
 
     # trigger action on collection
@@ -164,14 +167,14 @@ def test_operations_on_mixins_or_kinds(url):
     get_heads = heads.copy()
     get_heads['Category'] = 'my_stuff; scheme="http://example.com/occi/my_stuff#"'
     response, content = http.request(url + '/compute/', 'GET', headers=get_heads)
-    if response['x-occi-location'] != compute_loc2:
+    if response.get('x-occi-location') != compute_loc2:
         msg_list.append('Filtering based on categories seems not to be working...' + repr(response) + content)
 
     # filter on /copmute/ based on attribute and prev set hostname...
     get_heads = heads.copy()
-    get_heads['X-OCCI-Attribute'] = 'occi.compute.hostname="foo"'
+    get_heads['X-OCCI-Attribute'] = 'occi.compute.hostname="%s"' % unique_hostname
     response, content = http.request(url + '/compute/', 'GET', headers=get_heads)
-    if len(response['x-occi-location'].split()) != 1:
+    if not response.get('x-occi-location') or len(response['x-occi-location'].split()) != 1:
         msg_list.append('Filtering based on attributes seems not to be working...' + repr(response) + content)
 
     # now also delete the second compute
@@ -216,7 +219,7 @@ def test_operations_on_resource_instances(url):
     post_heads = heads.copy()
     post_heads['Category'] = 'compute;scheme="http://schemas.ogf.org/occi/infrastructure#"'
     response, content = http.request(url, 'POST', headers=post_heads)
-    if response.status == 201:
+    if response.status == 201 or (response.status == 200 and 'location' in response):
         loc = response['location']
     elif response.status == 200:
         logging.warn('Seems like OCCI server responded with 200...not 201 and location...')
