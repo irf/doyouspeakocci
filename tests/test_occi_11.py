@@ -23,7 +23,11 @@ import httplib2
 import logging
 import re
 
+
 class TestFailure(Exception):
+    '''
+    TBD.
+    '''
     def __init__(self, msg_list=None):
         if isinstance(msg_list, basestring):
             self.msg_list = [ msg_list ]
@@ -32,6 +36,7 @@ class TestFailure(Exception):
 
     def __str__(self):
         return '\n'.join(self.msg_list)
+
 
 def test_query_interface(url):
     '''
