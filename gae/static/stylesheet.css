@@ -1,12 +1,10 @@
 /*
- * Copyright (c) 2011 Technische Universität Dortmund
- *   
- * This library is free software; you can redistribute it and/or
+ * doyouspeakOCCI is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
  * 
- * This library is distributed in the hope that it will be useful,
+ * doyouspeakOCCI is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
@@ -16,9 +14,81 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 body {
-  font-family: Verdana, Helvetica, sans-serif;
-  background-color: #DDDDDD;
+	text-align: centered;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 100%;
+	color: #000000;
+	background-color: #FFFFFF;
+	margin: 20px;
+	padding: 0;
 }
+
+#wrapper {
+	width: 770px;
+	margin: 0 auto;
+	background-color: #F4F4F4;
+}
+
+#header {
+	color: #999999;
+	/*background-color: #cccccc;*/
+	padding: 0px;
+	margin: 0;
+}
+
+#body {
+	width: 770px;
+}
+
+#footer {
+	color: #999999;
+	background-color: #C5C5C5;
+	padding: 0px;
+	margin: 0;
+	font-size: 0.7em;
+}
+
+#header .content {
+	padding: 12px 20px;
+}
+
+#body .content {
+	padding: 20px 24px;
+	font-size: 0.8em;
+	line-height: 1.65em;
+	border-top: 1px solid #000;
+}
+
+#body .slogan {
+	font-family: 'Puritan', serif;
+	/*
+	Artifika
+	Julee
+	Short Stack
+	Delius Unicase
+	Nova Cut
+	Nova Slim
+	Volkhov
+	Walter Turncoat
+	Architects Daughter
+
+	Gloria Hallelujah
+	La Belle Aurore
+	*/
+	font-size: 15px;
+	font-weight: bold;
+	text-align:center;
+}
+
+#body .form{
+
+	text-align:center;
+}
+
+#footer .content {
+	padding: 12px 20px;
+}
+
 .occi_result_success {
   font-variant: small-caps;
   color: green;

@@ -23,10 +23,10 @@ api_version: 1
 
 handlers:
 - url: /static
-  static_dir: static
+  static_dir: gae/static
 
 - url: /.*
-  script: frontend.py
+  script: gae/main.py
 
 builtins:
 - datastore_admin: on

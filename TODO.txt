@@ -1,6 +1,0 @@
-
-TODO items:
-
-* Incorporate Andy's ANTLR grammer
-* register in pypi
-* move to gridforge
