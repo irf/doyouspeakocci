@@ -144,7 +144,7 @@ class TkRunner(Toplevel):
                                background='green')
                 label2.grid(column=1, row=i, sticky=N + E + W + S,
                             **self.paddingArgs)
-            except AttributeError as error:
+            except TestFailure as error:
                 logging.error(error)
                 label2 = Label(self.test_frame, text='Failed',
                                background='red')
@@ -209,7 +209,7 @@ class TextRunner(object):
                             print item
                     result = func(url)
                     print('{0:90s} {1:6s}'.format(desc.pop(), result))
-                except (TestFailure, AttributeError) as e:
+                except TestFailure as e:
                     if len(desc) > 1:
                         for item in desc[0:len(desc) - 1]:
                             print item
