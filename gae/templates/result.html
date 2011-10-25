@@ -1,0 +1,61 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta name="description" content="A compliance testing application for the Open Cloud Computing Interface family of specifications. Written in Python (mainly using httplib2 and django) it is designed to run in Google App Engine." />
+        <meta name="author" content="Alexander Papaspyrou, Technische Universität Dortmund" />
+        <meta name="keywords" content="doyouspeakOCCI, do you speak OCCI?, Open Cloud Computing Interface, OCCI, Compliance, Standards, Open Grid Forum">
+        <title>do you speak OCCI? Compliance Testing for the Open Cloud Computing Interface: Results</title>
+    </head>
+    <body>
+        <div>
+            Your implementation running at {{ suite.service_uri }} is
+            {% if suite.is_compliant %}
+                <span>compliant</span>. Congratulations!
+            {% else %}
+                <span>not compliant</span>. Please have a look at the detailed test results below:
+            {% endif %}
+        </div>
+        <div>
+        {% if !suite.is_compliant %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Test Name</th>
+                        <th>Description</th>
+                        <th>Result</th>
+                    </tr>
+                </thead>
+                <tfoot>
+                    <tr>
+                        <td colspan="3">
+                            Footer GOES HERE
+                        </td>
+                    </tr>
+                </tfoot>
+                <tbody>
+                {% for test in tests %}
+                    <tr>
+                        {% if test.result %}
+                        <td rowspan="2">{{ test.name }}</td>
+                        <td>{{ test.description }}</td>
+                        <td rowspan="2"><span>SUCCEEDED</span></td>
+                        {% else %}
+                        <td>{{ test.name }}</td>
+                        <td>{{ test.description }}</td>
+                        <td><span>FAILED</span></td>
+                        {% endif %}
+                    </tr>
+                    {% if !test.result %}
+                    <tr>
+                        <td>{{ test.details }}</td>
+                    </tr>
+                    {% endif %}
+                {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+        </div>
+    </body>
+</html>
