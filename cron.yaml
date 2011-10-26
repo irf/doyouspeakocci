@@ -1,0 +1,4 @@
+cron:
+- description: Daily compliance tests
+- url: /tasks/daily
+- schedule: every day 03:00

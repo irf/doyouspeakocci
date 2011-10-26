@@ -21,11 +21,35 @@
 
 from distutils.core import setup
 
-setup(name='OCCI tester',
-      version='0.2',
-      description='A set of tests and UIs to test OCCI service implementations',
-      author='OGF',
-      author_email='info@occi-wg.org',
-      url='http://www.occi-wg.org',
-      packages=['tests', 'gae'],
-     )
+setup(
+    name = 'doyouspeakOCCI',
+    version = '0.2',
+
+    author = 'Alexander Papaspyrou',
+    author_email = 'alexander.papaspyrou@tu-dortmund.de',
+    maintainer = 'The doyouspeakOCCI Community',
+    maintainer_email = 'doyouspeakocci@googlegroups.com',
+
+    url='http://doyouspeakocci.appspot.com',
+    description = 'A Google App Enginge based compliance test suite for the Open Cloud Computing Interface (OCCI) family of specifications.',
+    long_description = 'The doyouspeakOCCI Compliance Testing Facility is a [Google App Engine (GAE)](http://code.google.com/appengine/)-based checking tool for the [Open Cloud Computing Interface (OCCI)](http://occi-wg.org/) family of specifications. More specifically, it provides a full compliance test suite for the [OCCI Core (GFD.183)](http://ogf.org/documents/GFD.183.pdf), [OCCI Infrastructure (GFD.184)](http://ogf.org/documents/GFD.184.pdf), and [OCCI RESTful HTTP Rendering (GFD.185)](http://ogf.org/documents/GFD.185.pdf) specifications.',
+
+    download_url = 'http://github.com/irf/doyouspeakocci',
+
+    classifiers = [
+        'Development Status :: 4 - Beta',
+        'Environment :: Web Environment',
+        'Framework :: Django',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: GNU General Public License (GPL)',
+        'Natural Language :: English',
+        'Programming Language :: Python',
+        'Topic :: Internet :: WWW/HTTP :: WSGI :: Application',
+        'Topic :: Software Development :: Testing',
+    ],
+    platforms = [
+        'Google App Engine',
+    ],
+
+    packages=['dyso'],
+)

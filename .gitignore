@@ -1,5 +1,4 @@
 *.pyc
-*.html
 build/
 .settings/
 .pydevproject
