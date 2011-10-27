@@ -1,0 +1,120 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta name="description" content="A compliance testing application for the Open Cloud Computing Interface family of specifications. Written in Python (mainly using httplib2 and django) it is designed to run in Google App Engine." />
+        <meta name="author" content="Alexander Papaspyrou, Technische Universität Dortmund" />
+        <meta name="keywords" content="doyouspeakOCCI, do you speak OCCI?, Open Cloud Computing Interface, OCCI, Compliance, Standards, Open Grid Forum">
+        <title>doyouspeakOCCI :: About</title>
+
+        <link rel="stylesheet" type="text/css" href="/static/stylesheet.css">
+        <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Forum|Mako|Special+Elite|Ubuntu+Mono">
+
+        <script type="text/javascript">
+            function initialize() {
+                showHideAuth();
+            }
+            function showHideAuth() {
+                if(document.getElementById('needs_auth').checked) {
+                    document.getElementById('auth_details').style.display = 'block';
+                }
+                else {
+                    document.getElementById('auth_details').style.display = 'none';
+                }
+            }
+        </script>
+
+    </head>
+<body>
+    <ul id="navigation">
+        <li><a href="/">Welcome</a></li>
+        <li>|</li>
+        <li><a href="/statistics">Statistics</a></li>
+        <li>|</li>
+        <li>About</li>
+    </ul>
+    <div id="logotextarea">
+        <span class="doyouspeaklight">говорители</span><span class="doyouspeakdark">sprechensie</span><span class="doyouspeaklight">parle<br/>
+        zvous</span><span class="doyouspeakdark">μιλάτε</span><span class="doyouspeaklight">labhraíonntú</span><span class="doyouspeakdark">parl<br/>
+        i</span><span class="doyouspeaklight">loqueris</span><span class="doyouspeakdark">spreekje</span><span class="doyouspeaklight">talardu</span><span class="doyouspeakdark">esuste<br/>
+        dhabla</span><span class="doyouspeaklight">doyouspeak</span><span class="occi">OCCI?</span>
+    </div>
+    <div id="logopicturearea">
+        <img src="/static/logo.png" width="250px"/>
+    </div>
+    <div id="mainarea">
+    <p>The doyouspeakOCCI Compliance Testing Facility is a <a href="http://code.google.com/appengine/">Google App Engine
+        (GAE)</a>-based checking tool for the <a href="http://occi-wg.org/">Open Cloud Computing Interface (OCCI)</a>
+        family of specifications. More specifically, it provides a full compliance test suite for the <a
+        href="http://ogf.org/documents/GFD.183.pdf">OCCI Core (GFD.183)</a>, <a
+        href="http://ogf.org/documents/GFD.184.pdf">OCCI Infrastructure (GFD.184)</a>, and <a
+        href="http://ogf.org/documents/GFD.185.pdf">OCCI RESTful HTTP Rendering (GFD.185)</a> specifications.</p>
+    <p>doyouspeakOCCI is written in <a href="http://www.python.org">Python</a> and heavily building on the GAE services,
+        mainly <a href="http://code.google.com/appengine/docs/python/taskqueue/">Task Queue</a>, <a
+        href="http://code.google.com/appengine/docs/python/urlfetch/">URL Fetch</a>, and the <a
+        href="http://code.google.com/appengine/docs/python/tools/webapp/">webapp Framework</a>.</p>
+    <p>Note that doyouspeakOCCI not to be considered the “official” testing suite for OCCI endorsed by the
+        <a href="http://www.ogf.org">Open Grid Forum</a>, but rather than that, a third-party contribution which aims to
+        be as close as possible. For a more thorough explanation, please take a look at <a
+        href="https://github.com/irf/doyouspeakOCCI/wiki/is-dyso-normative">the wiki pages</a>.</p>
+
+    <h2 id="how-to-use">How to use</h2>
+    <p>doyouspeakOCCI was hard to implement, but is simple to use. Just point your browser to
+        <a href="http://doyouspeakocci.appspot.com">http://doyouspeakocci.appspot.com</a>, enter the base URL of your
+        OCCI implementation, and press “Go!”.</p>
+    <p>Optionally, you can provide credentials for HTTP basic auth, if your service is secured. We strongly recommend to
+        use a one-time test account; although we promise to use the credentials only for the compliance test, we cannot
+        guarantee what others on the way (especially GAE) will do with them. In the near future, doyouspeakOCCI will
+        support <a href="http://oauth.net">OAuth</a> to ameliorate this issue.</p>
+    <p>Please note that doyouspeakOCCI records data on every test run in the
+        <a href="http://code.google.com/appengine/docs/python/gettingstarted/usingdatastore.html">GAE DataStore</a>.
+        This is done solely for the sake of <a href="http://doyouspeakocci.appspot.com/statistics">displaying usage
+        statistics</a>. Within the limitations of applicable jurisdiction and the
+        <a href="http://code.google.com/appengine/terms.html">GAE Terms of Service</a>, we will not disclose this data
+        to anyone beyond what is being displayed on the doyouspeakOCCI web presence.</p>
+    <p>For other questions, please also take a look at the [FAQ] (https://github.com/irf/doyouspeakocci/wiki/faq).</p>
+
+    <h2 id="where-to-get">Where to get</h2>
+    <p>doyouspeakOCCI is available as a source code release only, which can be obtained by two ways:</p>
+    <ul>
+        <li>By <a href="http://help.github.com/git-cheat-sheets/">checking out</a> the source code via <code>git
+            checkout</code></li>
+        <li>By fetching a repository <a href="https://github.com/irf/doyouspeakocci/tarball/master">tarball</a> or <a
+            href="https://github.com/irf/doyouspeakocci/tarball/master">zipfile</a></li>
+    </ul>
+    <p>Alternatively, you might want to pick one of the advertised downloads (click on the “Downloads” button in the
+        upper right of the doyouspeakOCCI development home page at <a href="https://github.com/irf/doyouspeakocci">
+        GitHub</a>.</p>
+    <p>If you wish to run the service on your local system for testing purposes, please take a look at the <a
+        href="https://github.com/irf/doyouspeakOCCI/wiki/installation">doyouspeakOCCI Installation Guide</a> for a
+        detailed explanation on how to setup the environment.</p>
+
+    <h2 id="contributing">Contributing</h2>
+    <p>doyouspeakOCCI aims to be a community effort, and help is always welcome. Please contact us on the <a
+            href="https://groups.google.com/forum/#!forum/doyouspeakocci">mailing list</a> to learn more.</p>
+
+    <h3 id="license">License</h3>
+    <p>We think that doyouspeakOCCI should be available to everyone with the upmost amount of freedom. To make sure that
+    contributions to doyouspeakOCCI itself remain perpetually free, the code has been developed under the <a
+    href="http://www.gnu.org/licenses/gpl-3.0.html">GNU General Public License, Version 3</a>. The documentation coming
+    with doyouspeakocci is available under a <a href="http://creativecommons.org/licenses/by-sa/3.0/">Creative Commons
+    Attribution Share-Alike 3.0 License</a>.</p>
+
+    <h3 id="issues">Issues</h3>
+    <p>If you think that you have discovered a bug in doyouspeakOCCI, or you would like to see an additional feature in
+        the future, please use the <a href="https://github.com/irf/doyouspeakocci/issues">doyouspeakOCCI GitHub
+        Tracker</a> to submit an issue.</p>
+
+    <h3 id="patches">Patches</h3>
+    <p>You are welcome to contribute code for any kind of recorded issue. However, patches via email are not accepted.
+        Rather than that, please <a href="http://help.github.com/fork-a-repo/">fork</a> our repository, commit the
+        patch, and send us a <a href="http://help.github.com/send-pull-requests/">pull request</a> —we will then have a
+        look at it. Remember to add a link to the issue you aim to fix.</p>
+    </div>
+
+    <div id="footer">
+
+    </div>
+</body>
+</html>

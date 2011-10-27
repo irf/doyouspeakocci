@@ -1,62 +1,106 @@
 <?xml version="1.0" ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
-    <head>
-        <meta name="description" content="A compliance testing application for the Open Cloud Computing Interface family of specifications. Written in Python (mainly using httplib2 and django) it is designed to run in Google App Engine." />
-        <meta name="author" content="Alexander Papaspyrou, Technische Universität Dortmund" />
-        <meta name="keywords" content="doyouspeakOCCI, do you speak OCCI?, Open Cloud Computing Interface, OCCI, Compliance, Standards, Open Grid Forum">
-        <title>do you speak OCCI? Compliance Testing for the Open Cloud Computing Interface: Results</title>
-    </head>
-    <body>
-        <div>
-            Your implementation running at {{ suite.service_uri }} is
-            {% if suite.is_compliant %}
-                <span>compliant</span>. Congratulations!
-            {% else %}
-                <span>not compliant</span>.
+<head>
+    <meta name="description"
+          content="A compliance testing application for the Open Cloud Computing Interface family of specifications. Written in Python (mainly using httplib2 and django) it is designed to run in Google App Engine."/>
+    <meta name="author" content="Alexander Papaspyrou, Technische Universität Dortmund"/>
+    <meta name="keywords"
+          content="doyouspeakOCCI, do you speak OCCI?, Open Cloud Computing Interface, OCCI, Compliance, Standards, Open Grid Forum">
+    <title>doyouspeakOCCI :: Results</title>
+
+    <link rel="stylesheet" type="text/css" href="/static/stylesheet.css">
+    <link rel="stylesheet" type="text/css"
+          href="http://fonts.googleapis.com/css?family=Forum|Mako|Special+Elite|Ubuntu+Mono">
+
+    <script type="text/javascript">
+        function initialize() {
+            showHideAuth();
+        }
+        function showHideAuth() {
+            if (document.getElementById('needs_auth').checked) {
+                document.getElementById('auth_details').style.display = 'block';
+            }
+            else {
+                document.getElementById('auth_details').style.display = 'none';
+            }
+        }
+    </script>
+
+</head>
+<body onload="initialize()">
+<ul id="navigation">
+    <li><a href="/">Welcome</a></li>
+    <li>|</li>
+    <li><a href="/statistics">Statistics</a></li>
+    <li>|</li>
+    <li><a href="/static/about.html">About</a></li>
+</ul>
+<div id="logotextarea">
+    <span class="doyouspeaklight">говорители</span><span class="doyouspeakdark">sprechensie</span><span
+        class="doyouspeaklight">parle<br/>
+    zvous</span><span class="doyouspeakdark">μιλάτε</span><span class="doyouspeaklight">labhraíonntú</span><span
+        class="doyouspeakdark">parl<br/>
+    i</span><span class="doyouspeaklight">loqueris</span><span class="doyouspeakdark">spreekje</span><span
+        class="doyouspeaklight">talardu</span><span class="doyouspeakdark">esuste<br/>
+    dhabla</span><span class="doyouspeaklight">doyouspeak</span><span class="occi">OCCI?</span>
+</div>
+<div id="logopicturearea">
+    <img src="/static/logo.png" width="250px"/>
+</div>
+<div id="mainarea">
+    <div id="slogan">
+        Your implementation running at {{ suite.service_uri }} is
+        {% if suite.is_compliant %}
+        <span class="occi_compliant">compliant</span>. Congratulations!
+        {% else %}
+        <span class="occi_notcompliant">not compliant</span>.
+        {% endif %}
+        Please have a look at the detailed test results below:
+    </div>
+    <div>
+        <table>
+            <thead>
+            <tr>
+                <th class="test_id">Test Name</th>
+                <th class="test_description">Description</th>
+                <th class="test_result">Result</th>
+            </tr>
+            </thead>
+            <tfoot>
+            <tr>
+                <td colspan="3">
+                    &nbsp;
+                </td>
+            </tr>
+            </tfoot>
+            <tbody>
+            {% for test in tests %}
+            <tr>
+                {% if test.result %}
+                <td class="test_id">{{ test.name }}</td>
+                <td class="test_description">{{ test.description }}</td>
+                <td class="test_result"><span class="occi_test_success">SUCCEEDED</span></td>
+                {% else %}
+                <td class="test_id">{{ test.name }}</td>
+                <td class="test_description">{{ test.description }}</td>
+                <td class="test_result"><span class="occi_test_failure">FAILED</span></td>
+                {% endif %}
+            </tr>
+            {% if not test.result %}
+            <tr>
+                <td>{{ test.details }}</td>
+            </tr>
             {% endif %}
-            Please have a look at the detailed test results below:
-        </div>
-        <div>
-        {% comment %}{% if not suite.is_compliant %}{% endcomment %}
-            <table>
-                <thead>
-                    <tr>
-                        <th>Test Name</th>
-                        <th>Description</th>
-                        <th>Result</th>
-                    </tr>
-                </thead>
-                <tfoot>
-                    <tr>
-                        <td colspan="3">
-                            Footer GOES HERE
-                        </td>
-                    </tr>
-                </tfoot>
-                <tbody>
-                {% for test in tests %}
-                    <tr>
-                    {% if test.result %}
-                        <td rowspan="2">{{ test.name }}</td>
-                        <td>{{ test.description }}</td>
-                        <td rowspan="2"><span>SUCCEEDED</span></td>
-                    {% else %}
-                        <td>{{ test.name }}</td>
-                        <td>{{ test.description }}</td>
-                        <td><span>FAILED</span></td>
-                    {% endif %}
-                    </tr>
-                    {% if not test.result %}
-                    <tr>
-                        <td>{{ test.details }}</td>
-                    </tr>
-                    {% endif %}
-                {% endfor %}
-                </tbody>
-            </table>
-        {% comment %}{% endif %}{% endcomment %}
-        </div>
-    </body>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div id="footer">
+
+    </div>
+</div>
+</body>
 </html>

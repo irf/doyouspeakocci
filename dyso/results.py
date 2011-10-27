@@ -6,7 +6,7 @@
 # This file is part of doyouspeakOCCI.
 #
 # doyouspeakOCCI is free software; you can redistribute it and/or
-# modify it under the terms of the GNU Lesser General Public
+# modify it under the terms of the GNU General Public
 # License as published by the Free Software Foundation; either
 # version 2.1 of the License, or (at your option) any later version.
 #
@@ -15,23 +15,21 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 # Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public
+# You should have received a copy of the GNU General Public
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 #
 
 import os
 
-from dyso import test_httplib2
+from dyso import tests
 from dyso.model import Suite, Test
-
-from test_httplib2 import TestFailure
+from dyso.tests import ComplianceError
 
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 
 
-# ----- ResultPage -------------------------------------------------------------
 class ResultPage(webapp.RequestHandler):
     """
     TODO: not yet commented.
@@ -45,14 +43,13 @@ class ResultPage(webapp.RequestHandler):
         suite.service_uri = self.request.get('service_uri')
 
 
-        #        tests = { }
-        tests = []
+        compliance_tests = []
         is_compliant = True
 
         # run the test suite
-        for elem in dir(test_httplib2):
-            if elem.find('test_') != -1:
-                func = getattr(test_httplib2, elem)
+        for elem in dir(tests):
+            if elem.find('ctf_') != -1:
+                func = getattr(tests, elem)
                 desc = func.__doc__.strip()
 
                 # run the individual test
@@ -60,11 +57,10 @@ class ResultPage(webapp.RequestHandler):
                 try:
                     func(suite.service_uri)
                     test.result = True
-                except TestFailure, e:
+                except ComplianceError, e:
                     test.details = e
                     is_compliant = False
-                    #                tests[elem] = test
-                tests.append(test)
+                compliance_tests.append(test)
 
                 # store test to database and add to result set
                 test.put()
@@ -76,15 +72,14 @@ class ResultPage(webapp.RequestHandler):
         # produce template value set
         template_values = {
             'suite': suite,
-            'tests': tests
+            'tests': compliance_tests
         }
 
         # render result page
-        path = os.path.join(os.path.dirname(__file__), 'templates/result.html')
+        path = os.path.join(os.path.dirname(__file__), '../templates/result.html')
         self.response.out.write(template.render(path, template_values))
 
 
-# ----- StatisticsPage ---------------------------------------------------------
 class StatisticsPage(webapp.RequestHandler):
     """
     TODO: not yet commented.
@@ -103,8 +98,8 @@ class StatisticsPage(webapp.RequestHandler):
 
         # retrieve detailed test results from datastore
         breakdown = []
-        for elem in dir(test_httplib2):
-            if elem.find('test_') != -1:
+        for elem in dir(tests):
+            if elem.find('ctf_') != -1:
                 test = {
                     'name': elem,
                     'number_of_passes': Test.all().filter('name = ', elem).filter('result = ', True).count(),
@@ -119,7 +114,7 @@ class StatisticsPage(webapp.RequestHandler):
         }
 
         # render result page
-        path = os.path.join(os.path.dirname(__file__), 'templates/statistics.html')
+        path = os.path.join(os.path.dirname(__file__), '../templates/statistics.html')
         self.response.out.write(template.render(path, template_values))
 
 

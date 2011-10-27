@@ -1,6 +1,10 @@
+/* $Id$ */
+
 /*
+ * This file is part of doyouspeakOCCI.
+ *
  * doyouspeakOCCI is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
+ * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
  * 
@@ -9,99 +13,148 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  * 
- * You should have received a copy of the GNU Lesser General Public
+ * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
+
+a:link { color: #666666; text-decoration: underline; }
+a:visited { font-weight: normal; color: #CCCCCC; text-decoration: none; }
+
+code {
+    font-family: "Ubuntu Mono", "Courier New", monospace;
+    border: 1px;
+    border-color: #666666;
+    background-color: #CCCCCC;
+    padding: 2px;
+}
+
 body {
-	text-align: center;
-	font-family: Arial, Helvetica, sans-serif;
-	font-size: 100%;
-	color: #000000;
-	background-color: #FFFFFF;
-	margin: 20px;
-	padding: 0;
+    width: 800px;
+    margin: 0px auto;
 }
 
-#estd {
-    border-width: medium;
-    border-style: dashed outset;
-    border-color: green;
-    margin:  10px;
-    padding: 5px;
+ul#navigation {
+    top: 2em;
+    padding: 1em;
+    font-family: Mako, Helvetica, sans-serif;
+    text-align: center;
 }
 
-#wrapper {
-	width: 770px;
-	margin: 0 auto;
-	background-color: #F4F4F4;
+ul#navigation li {
+    display: inline;
+    margin:  0.5em;
 }
 
-#header {
-	color: #999999;
-	/*background-color: #cccccc;*/
-	padding: 0px;
-	margin: 0;
+#logotextarea {
+    float: left;
+    width: 500px;
+    margin-left: 10px;
+    margin-bottom: 50px;
+    text-align: justify;
+    font-family: Forum, Palatino, serif;
+    font-size: 32pt;
 }
 
-#body {
-/*	width: 770px; */
+.doyouspeaklight {
+    color: #CCCCCC;
+}
+
+.doyouspeakdark {
+    color: #999999;
+}
+
+.occi {
+    color: #000000;
+}
+
+#logopicturearea {
+    float: right;
+    width: 250px;
+}
+
+#slogan {
+    margin: 0.5em;
+    padding: 0.5em;
+    font-family: "Special Elite", cursive;
+    font-size: large;
+    text-align: center;
+    line-height: 1.25em;
+}
+
+#mainarea {
+    clear: both;
+    font-family: Mako, Helvetica, sans-serif;
+    text-align: justify;
+}
+
+#submitTest {
+    top: 2em;
+    padding: 1em;
+    font-family: Mako, Helvetica, sans-serif;
+    text-align: center;
+}
+
+#submitTest form div#service_details {
+    font-size: 18px;
+}
+
+#submitTest form div#service_details input#service_url {
+    width: 300px;
+    font-size: inherit;
+}
+
+#submitTest form div#service_details input#submit {
+    font-size: inherit;
+}
+
+tbody tr td.test_id {
+    font-family: "Ubuntu Mono", "Courier New", monospace;
+    border: 1px #666666;
+    background-color: #CCCCCC;
+    padding: 2px;
+}
+
+td {
+    margin: 10px;
+    padding: 10px;
+}
+
+.test_id {
+    text-align: center;
+}
+
+.test_description{
+    text-align: justify;
+}
+
+.test_result {
+    text-align: center;
+}
+
+.occi_compliant {
+    font-size: inherit;
+    color: green;
+}
+.occi_notcompliant {
+    color: maroon;
+}
+
+.occi_test_success {
+    font-variant: small-caps;
+    color: green;
+}
+.occi_test_failure {
+    font-variant: small-caps;
+    color: maroon;
 }
 
 #footer {
-	color: #999999;
-	background-color: #C5C5C5;
-	padding: 0px;
-	margin: 0;
-	font-size: 0.7em;
+    top: 2em;
+    padding: 1em;
+    font-family: Mako, Helvetica, sans-serif;
+    text-align: center;
+    background-color: #CCCCCC;
 }
 
-#header .content {
-	padding: 12px 20px;
-}
-
-#body .content {
-	padding: 20px 24px;
-	font-size: 0.8em;
-	line-height: 1.65em;
-	border-top: 1px solid #000;
-}
-
-#body .slogan {
-	font-family: 'Puritan', serif;
-	/*
-	Artifika
-	Julee
-	Short Stack
-	Delius Unicase
-	Nova Cut
-	Nova Slim
-	Volkhov
-	Walter Turncoat
-	Architects Daughter
-
-	Gloria Hallelujah
-	La Belle Aurore
-	*/
-	font-size: 15px;
-	font-weight: bold;
-	text-align:center;
-}
-
-#body .form{
-
-	text-align:center;
-}
-
-#footer .content {
-	padding: 12px 20px;
-}
-
-.occi_result_success {
-  font-variant: small-caps;
-  color: green;
-}
-.occi_result_failure {
-  font-variant: small-caps;
-  color: maroon;
-}
+/* eof */

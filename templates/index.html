@@ -1,76 +1,80 @@
 <?xml version="1.0" ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
-    <head>
-        <meta name="description" content="A compliance testing application for the Open Cloud Computing Interface family of specifications. Written in Python (mainly using httplib2 and django) it is designed to run in Google App Engine." />
-        <meta name="author" content="Alexander Papaspyrou, Technische Universität Dortmund" />
-        <meta name="keywords" content="doyouspeakOCCI, do you speak OCCI?, Open Cloud Computing Interface, OCCI, Compliance, Standards, Open Grid Forum">
-        <title>do you speak OCCI? Compliance Testing for the Open Cloud Computing Interface: Welcome</title>
+<head>
+    <meta name="description"
+          content="A compliance testing application for the Open Cloud Computing Interface family of specifications. Written in Python (mainly using httplib2 and django) it is designed to run in Google App Engine."/>
+    <meta name="author" content="Alexander Papaspyrou, Technische Universität Dortmund"/>
+    <meta name="keywords"
+          content="doyouspeakOCCI, do you speak OCCI?, Open Cloud Computing Interface, OCCI, Compliance, Standards, Open Grid Forum">
+    <title>doyouspeakOCCI :: Welcome</title>
 
-        <link rel="stylesheet" type="text/css" href="../static/stylesheet.css">
-        <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Puritan">
+    <link rel="stylesheet" type="text/css" href="/static/stylesheet.css">
+    <link rel="stylesheet" type="text/css"
+          href="http://fonts.googleapis.com/css?family=Forum|Mako|Special+Elite|Ubuntu+Mono">
 
-        <script type="text/javascript">
-            function initialize() {
-                showHideAuth();
+    <script type="text/javascript">
+        function initialize() {
+            showHideAuth();
+        }
+        function showHideAuth() {
+            if (document.getElementById('needs_auth').checked) {
+                document.getElementById('auth_details').style.display = 'block';
             }
-            function showHideAuth() {
-                if(document.getElementById('needs_auth').checked) {
-                    document.getElementById('auth_details').style.display = 'block';
-                }
-                else {
-                    document.getElementById('auth_details').style.display = 'none';
-                }
+            else {
+                document.getElementById('auth_details').style.display = 'none';
             }
-        </script>
+        }
+    </script>
 
-    </head>
-    <body onload="initialize()">
-    <!--wrapper start-->
-    <!-- div id="wrapper">
-
-    <!--header start-->
-    <div id="header">
-    <div class="content"><h1>{{ do_you_speak }} OCCI? <img src="../static/logo.png" width="317" height="239" alt="occi" /></h1></div>
+</head>
+<body onload="initialize()">
+<ul id="navigation">
+    <li>Welcome</li>
+    <li>|</li>
+    <li><a href="/statistics">Statistics</a></li>
+    <li>|</li>
+    <li><a href="/static/about.html">About</a></li>
+</ul>
+<div id="logotextarea">
+    <span class="doyouspeaklight">говорители</span><span class="doyouspeakdark">sprechensie</span><span
+        class="doyouspeaklight">parle<br/>
+    zvous</span><span class="doyouspeakdark">μιλάτε</span><span class="doyouspeaklight">labhraíonntú</span><span
+        class="doyouspeakdark">parl<br/>
+    i</span><span class="doyouspeaklight">loqueris</span><span class="doyouspeakdark">spreekje</span><span
+        class="doyouspeaklight">talardu</span><span class="doyouspeakdark">esuste<br/>
+    dhabla</span><span class="doyouspeaklight">doyouspeak</span><span class="occi">OCCI?</span>
+</div>
+<div id="logopicturearea">
+    <img src="/static/logo.png" width="250px"/>
+</div>
+<div id="mainarea">
+    <div id="slogan">Proudly serving the community since <span id="estd">{{ running_since|date:"F j, Y" }}</span>,
+        with {{ number_of_runs }} tests so far.
     </div>
-
-    <!--center start-->
-    <div id="body">
-    <div class="content">
-    <div class="slogan">Proudly serving the community since <span id="estd">{{ running_since|date:"F j, Y" }}</span>, with {{ number_of_runs }} tests so far.</div>
-    <br /><br />
-	<div class="form">
+    <div id="submitTest">
         <form action="/result" method="post">
-            <div>
-                <input type="url" name="service_uri" placeholder="http://example.com/occi" required="required" autofocus="autofocus"/>
+            <div id="service_details">
+                <input id="service_url" type="url" name="service_uri" placeholder="http://example.com/occi" required="required"
+                       autofocus="autofocus"/>
                 <input id="needs_auth" type="checkbox"
                        name="needs_auth" value="needs_auth"
                        onchange="showHideAuth()"/>
-                    Requires Authentication
+                Requires Authentication
                 </input>
-                <input type="submit" value="Go!">
+                <input id="submit" type="submit" value="Go!">
             </div>
             <div id="auth_details">
                 Username: <input name="username" placeholder="foo"/>
-                Password: <input type="password" name="password" placeholder="bar" />
+                Password: <input type="password" name="password" placeholder="bar"/>
             </div>
         </form>
-		</div>
-        <p></p>
     </div>
-    </div>
-    <!--center end-->
 
-
-    <!--footer start-->
     <div id="footer">
-    <div class="content">How to use | Test Details | Frequently Asked Questions | Contact and Imprint</div>
+
     </div>
-    <!--footer end-->
-
-	<!--/div>
-    <!--wrapper end-->
-
-    </body>
+</div>
+</body>
 </html>

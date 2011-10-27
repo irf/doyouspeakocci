@@ -3,16 +3,16 @@
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <meta http-equiv="Content-Style-Type" content="text/css"/>
-    <meta http-equiv="Content-Script-Type" content="text/javascript"/>
-
     <meta name="description"
           content="A compliance testing application for the Open Cloud Computing Interface family of specifications. Written in Python (mainly using httplib2 and django) it is designed to run in Google App Engine."/>
     <meta name="author" content="Alexander Papaspyrou, Technische Universität Dortmund"/>
     <meta name="keywords"
-          content="doyouspeakOCCI, do you speak OCCI?, Open Cloud Computing Interface, OCCI, Compliance, Standards, Open Grid Forum, Statistics"/>
+          content="doyouspeakOCCI, do you speak OCCI?, Open Cloud Computing Interface, OCCI, Compliance, Standards, Open Grid Forum">
+    <title>doyouspeakOCCI :: Results</title>
 
-    <title>do you speak OCCI? Compliance Testing for the Open Cloud Computing Interface: Statistics</title>
+    <link rel="stylesheet" type="text/css" href="/static/stylesheet.css">
+    <link rel="stylesheet" type="text/css"
+          href="http://fonts.googleapis.com/css?family=Forum|Mako|Special+Elite|Ubuntu+Mono">
 
     <!-- Google Maps -->
     <script type="text/javascript"
@@ -57,52 +57,89 @@
             overall_data.addRows([
                 ['Compliant', {{ overall.compliant_implementations }}],
                 ['Not Compliant', {{ overall.noncompliant_implementations }}]
-            ]);
-            var breakdown_data = new google.visualization.DataTable();
-            breakdown_data.addColumn('string', 'Test');
-            breakdown_data.addColumn('number', 'PASSs');
-            breakdown_data.addColumn('number', 'FAILs');
-            breakdown_data.addRows({{ breakdown|length }});
-            {% for test in breakdown %}
-                breakdown_data.setValue({{ forloop.counter0 }}, 0, '{{ test.name }}');
-                breakdown_data.setValue({{ forloop.counter0 }}, 1, {{ test.number_of_passes }});
-                breakdown_data.setValue({{ forloop.counter0 }}, 2, {{ test.number_of_fails }});
-            {% endfor %}
+        ]);
+        var breakdown_data = new google.visualization.DataTable();
+        breakdown_data.addColumn('string', 'Test');
+        breakdown_data.addColumn('number', 'PASSs');
+        breakdown_data.addColumn('number', 'FAILs');
+        breakdown_data.addRows({{ breakdown|length }});
+        {% for test in breakdown %}
+            breakdown_data.setValue(
+                    {{ forloop.counter0 }},
+                    0,
+                    '{{ test.name }}'
+        );
+        breakdown_data.setValue(
+                {{ forloop.counter0 }},
+                1,
+                {{ test.number_of_passes }}
+        );
+        breakdown_data.setValue(
+                {{ forloop.counter0 }},
+                2,
+                {{ test.number_of_fails }}
+        );
+        {% endfor %}
 
-            // set chart options
-            var overall_options = {
-                'title':'Overall Results',
-                'width':300,
-                'height':300
-            };
-            var breakdown_options = {
-                'title':'Per Test Breakdown Results',
-                'width':600,
-                'height':300,
-                'hAxis':{
-                    'title':'Test Name'
-                }
-            };
+        // set chart options
+        var overall_options = {
+            'title':'Overall Results',
+            'width':300,
+            'height':300
+        };
+        var breakdown_options = {
+            'title':'Per Test Breakdown Results',
+            'width':600,
+            'height':300,
+            'hAxis':{
+                'title':'Test Name'
+            }
+        };
 
-            // instantiate charts
-            var overall_chart = new google.visualization.PieChart(document.getElementById('div_overallchart'));
-            overall_chart.draw(overall_data, overall_options);
-            var breakdown_chart = new google.visualization.ColumnChart(document.getElementById('div_breakdownchart'));
-            breakdown_chart.draw(breakdown_data, breakdown_options);
+        // instantiate charts
+        var overall_chart = new google.visualization.PieChart(document.getElementById('div_overallchart'));
+        overall_chart.draw(overall_data, overall_options);
+        var breakdown_chart = new google.visualization.ColumnChart(document.getElementById('div_breakdownchart'));
+        breakdown_chart.draw(breakdown_data, breakdown_options);
         }
     </script>
 
 </head>
 
 <body>
-<h2>Locations of Tested Implementations</h2>
+<ul id="navigation">
+    <li><a href="/">Welcome</a></li>
+    <li>|</li>
+    <li>Statistics</li>
+    <li>|</li>
+    <li><a href="/static/about.html">About</a></li>
+</ul>
+<div id="logotextarea">
+    <span class="doyouspeaklight">говорители</span><span class="doyouspeakdark">sprechensie</span><span
+        class="doyouspeaklight">parle<br/>
+    zvous</span><span class="doyouspeakdark">μιλάτε</span><span class="doyouspeaklight">labhraíonntú</span><span
+        class="doyouspeakdark">parl<br/>
+    i</span><span class="doyouspeaklight">loqueris</span><span class="doyouspeakdark">spreekje</span><span
+        class="doyouspeaklight">talardu</span><span class="doyouspeakdark">esuste<br/>
+    dhabla</span><span class="doyouspeaklight">doyouspeak</span><span class="occi">OCCI?</span>
+</div>
+<div id="logopicturearea">
+    <img src="/static/logo.png" width="250px"/>
+</div>
+<div id="mainarea">
 
-<div id="div_implementationmap" style="height: 400px;"></div>
+    <div id="div_implementationmap" style="height: 400px;"></div>
 
-<h2>Test Statistics</h2>
+    <div id="div_overallchart"></div>
 
-<div id="div_overallchart"></div>
-<div id="div_breakdownchart"></div>
+    <div id="div_breakdownchart"></div>
+
+</div>
+
+<div id="footer">
+
+</div>
+
 </body>
 
 </html>

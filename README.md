@@ -1,16 +1,24 @@
 # doyouspeakOCCI Compliance Testing Facility
 The doyouspeakOCCI Compliance Testing Facility is a [Google App Engine (GAE)]
-(http://code.google.com/appengine/)-based checking tool
-for the [Open Cloud Computing Interface (OCCI)](http://occi-wg.org/) family of
-specifications. More specifically, it provides a full compliance test suite for the
-[OCCI Core (GFD.183)](http://ogf.org/documents/GFD.183.pdf),
+(http://code.google.com/appengine/)-based checking tool for the
+[Open Cloud Computing Interface (OCCI)](http://occi-wg.org/) family of
+specifications. More specifically, it provides a full compliance test suite for
+the [OCCI Core (GFD.183)](http://ogf.org/documents/GFD.183.pdf),
 [OCCI Infrastructure (GFD.184)](http://ogf.org/documents/GFD.184.pdf), and
 [OCCI RESTful HTTP Rendering (GFD.185)](http://ogf.org/documents/GFD.185.pdf)
 specifications.
 
-doyouspeakOCCI is written in [Python](http://www.python.org), mainly using
-[httplib2](http://code.google.com/p/httplib2/) and the [Django Web Framework]
-(https://www.djangoproject.com/).
+doyouspeakOCCI is written in [Python](http://www.python.org) and heavily
+building on the GAE services, mainly [Task Queue]
+(http://code.google.com/appengine/docs/python/taskqueue/), [URL Fetch]
+(http://code.google.com/appengine/docs/python/urlfetch/), and the [webapp
+Framework](http://code.google.com/appengine/docs/python/tools/webapp/).
+
+Note that doyouspeakOCCI not to be considered the "official" testing suite
+for OCCI endorsed by the Open Grid Forum, but rather than that, a third-party
+contribution which aims to be as close as possible. For a more thorough
+explanation, please take a look at [the wiki pages]
+(https://github.com/irf/doyouspeakOCCI/wiki/is-dyso-normative).
 
 
 ## How to use
@@ -58,7 +66,7 @@ us on the mailing lists to learn more.
 ### License
 We think that doyouspeakOCCI should be available to everyone with the upmost amount of
 freedom. To make sure that contributions to doyouspeakOCCI itself remain perpetually free,
-the code has been developed under the [GNU Lesser General Public License, Version 3](http://www.gnu.org/licenses/lgpl-3.0.html).
+the code has been developed under the [GNU General Public License, Version 3](http://www.gnu.org/licenses/gpl-3.0.html).
 The documentation coming with doyouspeakocci is available under a
 [Creative Commons Attribution Share-Alike 3.0 License](http://creativecommons.org/licenses/by-sa/3.0/).
 

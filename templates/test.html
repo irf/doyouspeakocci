@@ -12,41 +12,15 @@
     <title>do you speak OCCI? Compliance Testing for the Open Cloud Computing Interface: Statistics</title>
 
     <meta charset="UTF-8">
-    <script type="text/javascript"
-            src="http://maps.googleapis.com/maps/api/js?sensor=false">
-    </script>
-    <script type="text/javascript">
-        function initialize() {
-            var myOptions = {
-                scaleControl: true,
-                center: new google.maps.LatLng(51.490416, 7.409688),
-                zoom: 2,
-                mapTypeId: google.maps.MapTypeId.ROADMAP
-            };
-
-            var map = new google.maps.Map(document.getElementById('implementation_map'),
-                    myOptions);
-
-//        var marker = new google.maps.Marker({
-//          map: map,
-//          position: map.getCenter()
-//        });
-            var infowindow = new google.maps.InfoWindow();
-            infowindow.setContent('<b>Here you go.</b>');
-//        google.maps.event.addListener(marker, 'click', function() {
-//            infowindow.open(map, marker);
-//        });
-        }
-
-        function bodyOnLoad() {
-            alert("Hallo");
-        }
-
-        google.maps.event.addDomListener(window, 'load', initialize);
-    </script>
 </head>
-<body onload="bodyOnLoad()">
-<h2>Locations of Tested Implementations</h2>
+<body>
+<li>
+    <ul>Welcome</ul>
+    <ul>Statistics</ul>
+    <ul>About</ul>
+    <ul>Imprint</ul>
+</li>
+<h1>Locations of Tested Implementations</h1>
 
 <div id="implementation_map" style="height: 400px;"></div>
 
