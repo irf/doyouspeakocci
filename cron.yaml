@@ -20,7 +20,7 @@
 
 cron:
 - description: Daily compliance tests
-- url: /tasks/daily
-- schedule: every day 03:00
+  url: /tasks/daily
+  schedule: every day 03:00
 
 # eof

@@ -58,7 +58,7 @@ class ResultPage(webapp.RequestHandler):
                     func(suite.service_uri)
                     test.result = True
                 except ComplianceError, e:
-                    test.details = e
+                    test.details = e.__str__()
                     is_compliant = False
                 compliance_tests.append(test)
 
