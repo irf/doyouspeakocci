@@ -17,26 +17,6 @@
 # You should have received a copy of the GNU General Public License
 # along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
-import os
-
-from google.appengine.ext import webapp
-from google.appengine.ext.webapp import template
-
-class ScheduledPage(webapp.RequestHandler):
-    """
-    TODO: not yet commented.
-    """
-
-    def get(self, cron):
-        """
-        TODO: not yet commented.
-        """
-        
-        template_values = {}
-
-        # render result page
-        path = os.path.join(os.path.dirname(__file__), '../templates/tasks.html')
-        self.response.out.write(template.render(path, template_values))
-
+webapp_django_version = '1.2'
 
 # eof

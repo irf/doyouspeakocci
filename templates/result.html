@@ -1,6 +1,25 @@
 <?xml version="1.0" ?>
+<!-- $Id$$ -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<!--
+  -- This file is part of doyouspeakOCCI.
+  --
+  -- doyouspeakOCCI is free software: you can redistribute it and/or modify
+  -- it under the terms of the GNU General Public License as published by
+  -- the Free Software Foundation, either version 3 of the License, or
+  -- (at your option) any later version.
+  --
+  -- doyouspeakOCCI is distributed in the hope that it will be useful,
+  -- but WITHOUT ANY WARRANTY; without even the implied warranty of
+  -- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  -- GNU General Public License for more details.
+  --
+  -- You should have received a copy of the GNU General Public License
+  -- along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <meta name="description"
@@ -47,7 +66,7 @@
     dhabla</span><span class="doyouspeaklight">doyouspeak</span><span class="occi">OCCI?</span>
 </div>
 <div id="logopicturearea">
-    <img src="/static/logo.png" width="250px"/>
+    <img src="/static/images/logo.png" width="250px"/>
 </div>
 <div id="mainarea">
     <div id="slogan">
@@ -90,7 +109,7 @@
             </tr>
             {% if not test.result %}
             <tr>
-                <td>{{ test.details }}</td>
+                <td colspan="3">{{ test.details }}</td>
             </tr>
             {% endif %}
             {% endfor %}

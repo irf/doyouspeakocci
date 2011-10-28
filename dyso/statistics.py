@@ -39,6 +39,7 @@ class ResultPage(webapp.RequestHandler):
         suite = Suite()
         suite.service_uri = self.request.get('service_uri')
 
+
         compliance_tests = []
         is_compliant = True
 
@@ -73,6 +74,44 @@ class ResultPage(webapp.RequestHandler):
 
         # render result page
         path = os.path.join(os.path.dirname(__file__), '../templates/result.html')
+        self.response.out.write(template.render(path, template_values))
+
+
+class StatisticsPage(webapp.RequestHandler):
+    """
+    TODO: not yet commented.
+    """
+
+    def get(self):
+        """
+        TODO: not yet commented.
+        """
+
+        # retrieve overall test results from datastore
+        overall = {
+            'compliant_implementations': Suite.all().filter('is_compliant = ', True).count(),
+            'noncompliant_implementations': Suite.all().filter('is_compliant = ', False).count()
+        }
+
+        # retrieve detailed test results from datastore
+        breakdown = []
+        for elem in dir(tests):
+            if elem.find('ctf_') != -1:
+                test = {
+                    'name': elem,
+                    'number_of_passes': Test.all().filter('name = ', elem).filter('result = ', True).count(),
+                    'number_of_fails': Test.all().filter('name = ', elem).filter('result = ', False).count()
+                }
+                breakdown.append(test)
+
+        # produce template value set
+        template_values = {
+            'overall': overall,
+            'breakdown': breakdown
+        }
+
+        # render result page
+        path = os.path.join(os.path.dirname(__file__), '../templates/statistics.html')
         self.response.out.write(template.render(path, template_values))
 
 

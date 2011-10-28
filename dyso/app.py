@@ -17,26 +17,32 @@
 # You should have received a copy of the GNU General Public License
 # along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
-import os
+from dyso.main import MainPage
+
+from dyso.results import ResultPage, StatisticsPage
 
 from google.appengine.ext import webapp
-from google.appengine.ext.webapp import template
+from google.appengine.ext.webapp.util import run_wsgi_app
 
-class ScheduledPage(webapp.RequestHandler):
+
+application = webapp.WSGIApplication([
+    ('/', MainPage),
+    ('/result', ResultPage),
+    ('/statistics', StatisticsPage),
+], debug=True
+)
+
+
+def main():
     """
     TODO: not yet commented.
     """
-
-    def get(self, cron):
-        """
-        TODO: not yet commented.
-        """
-        
-        template_values = {}
-
-        # render result page
-        path = os.path.join(os.path.dirname(__file__), '../templates/tasks.html')
-        self.response.out.write(template.render(path, template_values))
+    run_wsgi_app(application)
 
 
+# ----- default initialization -------------------------------------------------
+if __name__ == "__main__":
+    main()
+
+    
 # eof
