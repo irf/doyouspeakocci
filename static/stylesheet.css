@@ -25,8 +25,9 @@ code {
     font-family: "Ubuntu Mono", "Courier New", monospace;
     border: 1px;
     border-color: #666666;
+    border-radius: 3px;
     background-color: #CCCCCC;
-    padding: 2px;
+    padding: 3px;
 }
 
 body {
@@ -137,6 +138,7 @@ td {
     color: green;
 }
 .occi_notcompliant {
+    font-size: inherit;
     color: maroon;
 }
 

@@ -61,11 +61,12 @@ Computing Interface - RESTful HTTP Rendering specification.
     messages = []
     headers = {
         'Content-type': 'text/occi',
-        'Accept': 'text/plain'
+        'Accept': 'text/plain',
+        'Cache-control': 'max-age=0',
     }
 
     # retrieval of all kinds, actions and mixins
-    result = urlfetch.fetch(url + '/.well-known/org/ogf/occi/-/')
+    result = urlfetch.fetch(url + '/.well-known/org/ogf/occi/-/', headers=headers, deadline=60)
     if not result.status_code in [200]:
         messages.append(
             'GET on query interface failed ('
@@ -76,7 +77,7 @@ Computing Interface - RESTful HTTP Rendering specification.
     get_headers['Accept'] = 'text/occi'
     get_headers['Category'] = 'compute; scheme="http://schemas.ogf.org/occi/infrastructure#"'
 
-    result = urlfetch.fetch(url + '/.well-known/org/ogf/occi/-/', headers=get_headers)
+    result = urlfetch.fetch(url + '/.well-known/org/ogf/occi/-/', headers=get_headers, deadline=60)
 
     if not result.status_code in [200]:
         messages.append(
@@ -91,17 +92,16 @@ Computing Interface - RESTful HTTP Rendering specification.
     # remove the mixin if it exists first to avoid conflicts
     get_headers = headers.copy()
     get_headers['Category'] = 'my_stuff; scheme="http://example.com/occi/my_stuff#"'
-    result = urlfetch.fetch(url + '/.well-known/org/ogf/occi/-/', headers=get_headers)
+    result = urlfetch.fetch(url + '/.well-known/org/ogf/occi/-/', headers=get_headers, deadline=60)
     if result.status_code in [200]:
         del_heads = headers.copy()
         del_heads['Category'] = 'my_stuff; scheme="http://example.com/occi/my_stuff#"'
-        urlfetch.fetch(url + '/.well-known/org/ogf/occi/-/', method=urlfetch.DELETE, headers=del_heads)
+        urlfetch.fetch(url + '/.well-known/org/ogf/occi/-/', method=urlfetch.DELETE, headers=del_heads, deadline=60)
 
     # adding a mixin definition
     post_heads = headers.copy()
-    post_heads[
-    'Category'] = 'my_stuff; scheme="http://example.com/occi/my_stuff#"; class="mixin"; rel="http://example.com/occi/something_else#mixin"; location="/my_stuff/"'
-    result = urlfetch.fetch(url + '/.well-known/org/ogf/occi/-/', method=urlfetch.POST, headers=post_heads)
+    post_heads['Category'] = 'my_stuff; scheme="http://example.com/occi/my_stuff#"; class="mixin"; rel="http://example.com/occi/something_else#mixin"; location="/my_stuff/"'
+    result = urlfetch.fetch(url + '/.well-known/org/ogf/occi/-/', method=urlfetch.POST, headers=post_heads, deadline=60)
     if not result.status_code in [200]:
         messages.append(
             'Addition of user-defined mixin on query interface failed ('
@@ -110,7 +110,7 @@ Computing Interface - RESTful HTTP Rendering specification.
     # removing a mixin definition
     delete_heads = headers.copy()
     delete_heads['Category'] = 'my_stuff; scheme="http://example.com/occi/my_stuff#"; class="mixin";'
-    result = urlfetch.fetch(url + '/.well-known/org/ogf/occi/-/', method=urlfetch.DELETE, headers=delete_heads)
+    result = urlfetch.fetch(url + '/.well-known/org/ogf/occi/-/', method=urlfetch.DELETE, headers=delete_heads, deadline=60)
     if not result.status_code in [200]:
         messages.append(
             'Removal of user-defined mixin on query interface failed ('
@@ -128,22 +128,23 @@ of the Open Cloud Computing Interface - RESTful HTTP Rendering specification.
     messages = []
     headers = {
         'Content-Type': 'text/occi',
-        'Accept': 'text/occi'
+        'Accept': 'text/occi',
+        'Cache-control': 'max-age=0',
     }
     unique_hostname = "doyouspeakocci::" + uuid.uuid4().__str__()
 
     # POST some compute instances
     post_heads = headers.copy()
     post_heads['Category'] = 'compute;scheme="http://schemas.ogf.org/occi/infrastructure#"'
-    urlfetch.fetch(url, method=urlfetch.POST, headers=post_heads)
+    urlfetch.fetch(url, method=urlfetch.POST, headers=post_heads, deadline=60)
     post_heads['X-OCCI-Attribute'] = 'occi.compute.hostname="' + unique_hostname + '"'
-    urlfetch.fetch(url, method=urlfetch.POST, headers=post_heads)
+    urlfetch.fetch(url, method=urlfetch.POST, headers=post_heads, deadline=60)
 
     # get them as described in section 3.4.2 - text/plain and text/uri-list should contain the same result
-    result_textocci = urlfetch.fetch(url + '/compute/', headers=headers)
+    result_textocci = urlfetch.fetch(url + '/compute/', headers=headers, deadline=60)
 
-    get_heads = {'Accept': 'text/uri-list'}
-    result_texturilist = urlfetch.fetch(url + '/compute/', headers=get_heads)
+    get_heads = {'Accept': 'text/uri-list', 'Cache-control': 'max-age=0'}
+    result_texturilist = urlfetch.fetch(url + '/compute/', headers=get_heads, deadline=60)
 
     content = [item.strip() for item in result_texturilist.content.split('\n')]
     for item in result_textocci.headers['x-occi-location'].split(','):
@@ -153,7 +154,7 @@ of the Open Cloud Computing Interface - RESTful HTTP Rendering specification.
     # trigger action on collection
     action_heads = headers.copy()
     action_heads['Category'] = 'start; scheme="http://schemas.ogf.org/occi/infrastructure/compute/action#"'
-    result = urlfetch.fetch(url + '/compute/?action=start', method=urlfetch.POST, headers=action_heads)
+    result = urlfetch.fetch(url + '/compute/?action=start', method=urlfetch.POST, headers=action_heads, deadline=60)
     if result.status_code != 200:
         messages.append(
             'Action triggering on collection failed: response was "' + repr(result) + '"'
@@ -161,77 +162,80 @@ of the Open Cloud Computing Interface - RESTful HTTP Rendering specification.
 
     # create a user defined mixin and add a compute instance
     computeinstance_first = result_textocci.headers['x-occi-location'].split(', ')[0]
+    logging.debug(computeinstance_first)
     computeinstance_second = result_textocci.headers['x-occi-location'].split(', ')[1]
+    logging.debug(computeinstance_second)
 
     post_heads = headers.copy()
     post_heads['Category']\
         = 'my_stuff; scheme="http://example.com/occi/my_stuff#"; class="mixin"; rel="http://example.com/occi/something_else#mixin"; location="/my_stuff/"'
-    result = urlfetch.fetch(url + '/-/', method=urlfetch.POST, headers=post_heads)
+    result = urlfetch.fetch(url + '/-/', method=urlfetch.POST, headers=post_heads, deadline=60)
     if result.status_code != 200:
         messages.append('Unable to create a user-defined mixin: response was "' + repr(result) + '"')
 
     post_heads = headers.copy()
     post_heads['X-OCCI-Location'] = computeinstance_first
-    result = urlfetch.fetch(url + '/my_stuff/', method=urlfetch.POST, headers=post_heads)
+    result = urlfetch.fetch(url + '/my_stuff/', method=urlfetch.POST, headers=post_heads, deadline=60)
     if result.status_code != 200:
         messages.append('Unable to add a kind to a user-defined mixin: response was "' + repr(result) + '"')
 
     # check if the user defined mixin was added to the compute instance
-    result = urlfetch.fetch(computeinstance_first, headers=headers)
+    result = urlfetch.fetch(computeinstance_first, headers=headers, deadline=60)
+    logging.debug(repr(result.headers))
     if result.headers['category'].find('my_stuff') is - 1:
         messages.append('Adding mixin to resource seems to be broken: response was "' + repr(result) + '"')
 
     # check if a get on the location of the user-defined mixin return the compute_loc
-    result = urlfetch.fetch(url, headers=headers)
-    if len(result.headers['x-occi-location'].split(',')) == 0:
+    result = urlfetch.fetch(url, headers=headers, deadline=60)
+    if not len(result.headers['x-occi-location'].split(',')):
         messages.append('Mixin collection unexpectedly empty: response was "' + repr(result) + '"')
 
     # replace the collection and only add compute_loc2 as the new collection
     put_heads = headers.copy()
     put_heads['X-OCCI-Location'] = computeinstance_second
-    result = urlfetch.fetch(url + '/my_stuff/', method=urlfetch.PUT, headers=put_heads)
+    result = urlfetch.fetch(url + '/my_stuff/', method=urlfetch.PUT, headers=put_heads, deadline=60)
     if result.status_code != 200:
         messages.append('Running full update on resource seems to be broken: response was "' + repr(result) + '"')
 
-    result = urlfetch.fetch(url + '/my_stuff/', headers=headers)
+    result = urlfetch.fetch(url + '/my_stuff/', headers=headers, deadline=60)
     if result.headers.get('x-occi-location') != computeinstance_second:
         messages.append('Running full udpate on resource seems to be broken: response was "' + repr(result) + '"')
 
     # filter on /compute/ based on category my_stuff...
     get_heads = headers.copy()
     get_heads['Category'] = 'my_stuff; scheme="http://example.com/occi/my_stuff#"'
-    result = urlfetch.fetch(url + '/compute/', headers=get_heads)
+    result = urlfetch.fetch(url + '/compute/', headers=get_heads, deadline=60)
     if result.headers.get('x-occi-location') != computeinstance_second:
         messages.append('Category-based filtering seems to be broken:  response was "' + repr(result) + '"')
 
     # filter on /copmute/ based on attribute and prev set hostname...
     get_heads = headers.copy()
     get_heads['X-OCCI-Attribute'] = 'occi.compute.hostname="' + unique_hostname + '"'
-    result = urlfetch.fetch(url + '/compute/', headers=get_heads)
+    result = urlfetch.fetch(url + '/compute/', headers=get_heads, deadline=60)
     if not result.headers.get('x-occi-location') or len(result.headers['x-occi-location'].split()) != 1:
         messages.append('Attribute-based filtering seems to be broken: response was "' + repr(result) + '"')
 
     # now also delete the second compute
     delete_heads = headers.copy()
     delete_heads['X-OCCI-Location'] = computeinstance_second
-    result = urlfetch.fetch(url + '/my_stuff/', method=urlfetch.DELETE, headers=delete_heads)
+    result = urlfetch.fetch(url + '/my_stuff/', method=urlfetch.DELETE, headers=delete_heads, deadline=60)
     if result.status_code != 200:
         raise ComplianceError('Unable to remove last entity from mixin: response was "' + repr(result) + '"')
 
-    result = urlfetch.fetch(url + '/my_stuff/', headers=headers)
+    result = urlfetch.fetch(url + '/my_stuff/', headers=headers, deadline=60)
     if hasattr(result.headers, 'x-occi-location'):
         messages.append('Unexpected item in collection: response was "' + repr(result) + '"')
 
     # finally delete the mixin
     put_heads = headers.copy()
     put_heads['Category'] = 'my_stuff; scheme="http://example.com/occi/my_stuff#"; class="mixin"'
-    result = urlfetch.fetch(url + '/-/', method=urlfetch.DELETE, headers=put_heads)
+    result = urlfetch.fetch(url + '/-/', method=urlfetch.DELETE, headers=put_heads, deadline=60)
     if result.status_code != 200:
         raise ComplianceError('Unable to delete a user-defined mixin: response was "' + repr(result) + '"')
 
     # and delete all compute instances
     del_heads = headers.copy()
-    result = urlfetch.fetch(url + '/compute/', method=urlfetch.DELETE, headers=del_heads)
+    result = urlfetch.fetch(url + '/compute/', method=urlfetch.DELETE, headers=del_heads, deadline=60)
     if result.status_code != 200:
         raise ComplianceError('Unable to delete a compute instances: response was "' + repr(result) + '"')
 
@@ -247,13 +251,15 @@ Open Cloud Computing Interface - RESTful HTTP Rendering specification.
     messages = []
     headers = {
         'Content-Type': 'text/occi',
-        'Accept': 'text/occi'
+        'Accept': 'text/occi',
+        'Cache-control': 'max-age=0',
     }
 
     # POST to create
+    loc = None
     post_heads = headers.copy()
     post_heads['Category'] = 'compute;scheme="http://schemas.ogf.org/occi/infrastructure#"'
-    result = urlfetch.fetch(url, method=urlfetch.POST, headers=post_heads)
+    result = urlfetch.fetch(url, method=urlfetch.POST, headers=post_heads, deadline=60)
     if result.status_code == 201 or (result.status_code == 200 and 'location' in result.headers):
         loc = result.headers['location']
     elif result.status_code == 200:
@@ -264,14 +270,14 @@ Open Cloud Computing Interface - RESTful HTTP Rendering specification.
         messages.append('Creation of "compute" kind instance failed: response was "' + repr(result) + '"')
 
     # trigger action...
-    result = urlfetch.fetch(loc, headers=headers)
+    result = urlfetch.fetch(loc, headers=headers, deadline=60)
     links = result.headers['link'].split(',')
     for link in links:
         if link.find('?action=start>') != -1:
             action_url = url + link[1:link.find('>')]
             action_heads = headers.copy()
             action_heads['Category'] = 'start; scheme="http://schemas.ogf.org/occi/infrastructure/compute/action#"'
-            result = urlfetch.fetch(action_url, method=urlfetch.POST, headers=action_heads)
+            result = urlfetch.fetch(action_url, method=urlfetch.POST, headers=action_heads, deadline=60)
             if not result.status_code == 200:
                 messages.append('Triggering of action failed: response was "' + repr(result) + '"')
         else:
@@ -280,7 +286,7 @@ Open Cloud Computing Interface - RESTful HTTP Rendering specification.
     # POST - partial update
     post_heads = headers.copy()
     post_heads['X-OCCI-Attribute'] = 'occi.compute.hostname="foo"'
-    result = urlfetch.fetch(loc, method=urlfetch.POST, headers=post_heads)
+    result = urlfetch.fetch(loc, method=urlfetch.POST, headers=post_heads, deadline=60)
     if not result.status_code == 200:
         messages.append('Update on resource <' + loc + '> failed: response was "' + repr(result) + '"')
 
@@ -289,7 +295,7 @@ Open Cloud Computing Interface - RESTful HTTP Rendering specification.
     put_heads = headers.copy()
     put_heads['Category'] = 'compute;scheme="http://schemas.ogf.org/occi/infrastructure#"'
     put_heads['X-OCCI-Attribute'] = 'example.test="foo"'
-    result = urlfetch.fetch(put_url, method=urlfetch.PUT, headers=put_heads)
+    result = urlfetch.fetch(put_url, method=urlfetch.PUT, headers=put_heads, deadline=60)
     # RN: A server is allowed to refuse the request. #3.4.4 footnote 6.
     if result.status_code == 400:
         logging.warn('Server refused PUT create at <' + put_url + '>, this is OK according to section 3.4.4')
@@ -301,21 +307,21 @@ Open Cloud Computing Interface - RESTful HTTP Rendering specification.
     put_heads = headers.copy()
     put_heads['Category'] = 'compute;scheme="http://schemas.ogf.org/occi/infrastructure#"'
     put_heads['X-OCCI-Attribute'] = 'occi.core.title="My Compute instance"'
-    result = urlfetch.fetch(put_url, method=urlfetch.PUT, headers=put_heads)
+    result = urlfetch.fetch(put_url, method=urlfetch.PUT, headers=put_heads, deadline=60)
     if not result.status_code == 200:
         messages.append('Full update on "compute" kind instance at <' + put_url + '> failed: response was "' + repr(result) + '"')
 
     # GET
-    result = urlfetch.fetch(loc, headers=headers)
+    result = urlfetch.fetch(loc, headers=headers, deadline=60)
     if not result.status_code == 200:
         messages.append('Resource retrieval at <' + loc + '> failed: response was "' + repr(result))
 
     # DELETE
-    result = urlfetch.fetch(loc, method=urlfetch.DELETE, headers=headers)
+    result = urlfetch.fetch(loc, method=urlfetch.DELETE, headers=headers, deadline=60)
     if not result.status_code == 200:
         messages.append('Resource deletion of <' + loc + '> failed: response was "' + repr(result))
     if loc != put_url:
-        result = urlfetch.fetch(put_url, method=urlfetch.DELETE, headers=headers)
+        result = urlfetch.fetch(put_url, method=urlfetch.DELETE, headers=headers, deadline=60)
         if not result.status_code == 200:
             messages.append('Resource deletion of <' + loc + '> failed: response was "' + repr(result))
 
@@ -330,13 +336,14 @@ Cloud Computing Interface - RESTful HTTP Rendering specification.
     """
     messages = []
     headers = {
-        'Content-Type': 'text/occi'
+        'Content-Type': 'text/occi',
+        'Cache-control': 'max-age=0',
     }
 
     # create compute
     compute_heads = headers.copy()
     compute_heads['Category'] = 'compute;scheme="http://schemas.ogf.org/occi/infrastructure#"'
-    result = urlfetch.fetch(url, method=urlfetch.POST, headers=compute_heads)
+    result = urlfetch.fetch(url, method=urlfetch.POST, headers=compute_heads, deadline=60)
     if 'location' not in result.headers and result.status_code not in (201, 200):
         logging.warn('Creation failed - this might be okay - please examine output! ' + repr(result) + '"')
         logging.warn('Test needs to be updated to discover location by doing a GET on /compute/')
@@ -346,7 +353,7 @@ Cloud Computing Interface - RESTful HTTP Rendering specification.
     # create network
     network = headers.copy()
     network['Category'] = 'network;scheme="http://schemas.ogf.org/occi/infrastructure#"'
-    result = urlfetch.fetch(url, method=urlfetch.POST, headers=network)
+    result = urlfetch.fetch(url, method=urlfetch.POST, headers=network, deadline=60)
     if result.status_code not in [200, 201]:
         logging.warn('Creation failed - this might be okay - please examine output! ' + repr(result) + '"')
     network_loc = result.headers['location']
@@ -355,7 +362,7 @@ Cloud Computing Interface - RESTful HTTP Rendering specification.
     link = headers.copy()
     link['Category'] = 'networkinterface;scheme="http://schemas.ogf.org/occi/infrastructure#"'
     link['X-OCCI-Attribute'] = 'occi.core.source="' + compute_loc + '", occi.core.target="' + network_loc + '"'
-    result = urlfetch.fetch(url, method=urlfetch.POST, headers=link)
+    result = urlfetch.fetch(url, method=urlfetch.POST, headers=link, deadline=60)
     if result.status_code not in [200, 201]:
         messages.append('Creation of a "networkinterface" link instance failed: response was "' + repr(result) + '"')
     link_loc = result.headers['location']
@@ -363,7 +370,7 @@ Cloud Computing Interface - RESTful HTTP Rendering specification.
     # check if links has source, target attributes
     get_heads = headers.copy()
     get_heads['Accept'] = 'text/occi'
-    result = urlfetch.fetch(link_loc, headers=get_heads)
+    result = urlfetch.fetch(link_loc, headers=get_heads, deadline=60)
     if result.headers.has_key('x-occi-attribute'):
         if result.headers['x-occi-attribute'].find('occi.core.source') == -1 or result.headers['x-occi-attribute'].find('occi.core.target') == -1:
             messages.append('Missing "source" and/or "target" attribute on link: response was "' + repr(result) + '"')
@@ -371,7 +378,7 @@ Cloud Computing Interface - RESTful HTTP Rendering specification.
         messages.append('Link retrieval seems to be broken: response was "' + repr(result) + '"')
 
     # 1st cleanup...
-    result = urlfetch.fetch(compute_loc, method=urlfetch.DELETE, headers=headers)
+    result = urlfetch.fetch(compute_loc, method=urlfetch.DELETE, headers=headers, deadline=60)
     if not result.status_code == 200:
         messages.append('Resource deletion of <' + compute_loc + '> failed: response was "' + repr(result))
 
@@ -380,7 +387,7 @@ Cloud Computing Interface - RESTful HTTP Rendering specification.
     compute_heads['Category'] = 'compute;scheme="http://schemas.ogf.org/occi/infrastructure#"'
     compute_heads['Link'] = '<' + network_loc + '>; rel="http://schemas.ogf.org/occi/infrastructure#network"; category="http://schemas.ogf.org/occi/infrastructure#networkinterface";'
 
-    result = urlfetch.fetch(url, method=urlfetch.POST, headers=compute_heads)
+    result = urlfetch.fetch(url, method=urlfetch.POST, headers=compute_heads, deadline=60)
     if result.status_code not in [200, 201]:
         logging.warn('Creation failed - this might be okay - please examine output! ' + repr(result) + '"')
     compute_loc = result.headers['location']
@@ -388,16 +395,16 @@ Cloud Computing Interface - RESTful HTTP Rendering specification.
     # Now check if compute has inline link rendering...
     get_heads = headers.copy()
     get_heads['Accept'] = 'text/occi'
-    result = urlfetch.fetch(compute_loc, headers=get_heads)
+    result = urlfetch.fetch(compute_loc, headers=get_heads, deadline=60)
     if not result.headers.has_key('link'):
         messages.append('Inline link rendering for "compute" resource seems to be missing: response was "' + repr(result) + '"')
 
     # 2nd cleanup...
-    result = urlfetch.fetch(compute_loc, method=urlfetch.DELETE, headers=headers)
+    result = urlfetch.fetch(compute_loc, method=urlfetch.DELETE, headers=headers, deadline=60)
     if not result.status_code == 200:
         messages.append('Resource deletion of <' + compute_loc + '> failed: response was "' + repr(result))
     # no need to delete link since that should be in the lifecycle of the compute resource...
-    result = urlfetch.fetch(network_loc, method=urlfetch.DELETE, headers=headers)
+    result = urlfetch.fetch(network_loc, method=urlfetch.DELETE, headers=headers, deadline=60)
     if not result.status_code == 200:
         messages.append('Resource deletion of <' + network_loc + '> failed: response was "' + repr(result))
 
@@ -416,10 +423,13 @@ the Open Cloud Computing Interface - RESTful HTTP Rendering specification.
 
     regex = r'\w+; \bscheme=[a-z:./#"]*; \bclass="(?:action|kind|mixin)"'
 
-    heads = {'Accept': 'text/plain'}
+    heads = {
+        'Accept': 'text/plain',
+        'Cache-control': 'max-age=0',
+    }
     discovery_url = url + '/-/'
     
-    result = urlfetch.fetch(discovery_url, headers=heads)
+    result = urlfetch.fetch(discovery_url, headers=heads, deadline=60)
     cat_rend = result.content.split('\n')[1].strip()
 
     cat_rend = cat_rend[10:]
@@ -430,7 +440,8 @@ the Open Cloud Computing Interface - RESTful HTTP Rendering specification.
         messages.append('Syntax error in "text/plain" rendering (should adhere to <term>;scheme="<url>";class=[kind,action,mixin]): response was "' + repr(result) + '"')
 
     heads['Accept'] = 'text/occi'
-    result = urlfetch.fetch(discovery_url, headers=heads)
+    logging.debug(heads)
+    result = urlfetch.fetch(discovery_url, headers=heads, deadline=60)
     cat_rend = result.headers['category'].strip()
     p = re.compile(regex)
     m = p.match(cat_rend)
@@ -443,14 +454,14 @@ the Open Cloud Computing Interface - RESTful HTTP Rendering specification.
         'Category': 'compute;scheme="http://schemas.ogf.org/occi/infrastructure#"',
         'X-OCCI-Attribute': 'occi.compute.memory=3.6, occi.core.title="How\'s your quotes escaping? \\", occi.compute.memory=1.0"'
     }
-    result = urlfetch.fetch(url, method=urlfetch.POST, headers=post_heads)
+    result = urlfetch.fetch(url, method=urlfetch.POST, headers=post_heads, deadline=60)
     if not result.headers.get('location') or result.status_code not in (200, 201):
         messages.append('Creation of "compute" resource with "X-OCCI-Attribute: {attr}" failed: response was "{resp}"' %
                 {'attr': post_heads['X-OCCI-Attribute'], 'resp': repr(result)})
         raise ComplianceError(messages)
     compute_loc = result.headers.get('location')
 
-    result = urlfetch.fetch(compute_loc, headers={'Accept': 'text/plain'})
+    result = urlfetch.fetch(compute_loc, headers={'Accept': 'text/plain', 'Cache-control': 'max-age=0',}, deadline=60)
     if not result.status_code == 200:
         messages.append('Resource retrieval of <' + compute_loc + '> failed: response was "' + repr(result) + '"')
     # If memory=1.0 quote parsing failed, should be 3.6
@@ -491,9 +502,10 @@ Interface - RESTful HTTP Rendering specification.
 
     headers = {
         'Accept': 'text/occi',
+        'Cache-control': 'max-age=0',
        }
 
-    result = urlfetch.fetch(url + '/', headers=headers)
+    result = urlfetch.fetch(url + '/', headers=headers, deadline=60)
     if result.headers.get('server').find('OCCI/1.1') == -1:
         messages.append('Server does not correctly expose version OCCI/1.1: response was "' + result.headers.get('server') + '"')
 
@@ -507,20 +519,19 @@ Tests the correct handling of "Content-type" and "Accept" headers as described
 in section 3.6.6 of the Open Cloud Computing Interface - RESTful HTTP Rendering
 specification.
     """
-    # TODO: check post commands...
     msg_list = []
-    heads = {'Accept': 'text/plain'}
+    heads = {'Accept': 'text/plain', 'Cache-control': 'max-age=0'}
     url += '/-/'
     
 
-    result = urlfetch.fetch(url, headers=heads)
+    result = urlfetch.fetch(url, headers=heads, deadline=60)
     content_type = result.headers.get('content-type')
     if content_type: content_type = content_type.split(';')[0].strip()
     if not content_type == 'text/plain':
         msg_list.append('On "Accept: text/plain", "Content-type: text/plain" was not exposed by the server: response was "' + repr(result) + '"')
 
     heads = {'Accept': 'text/occi'}
-    result = urlfetch.fetch(url, headers=heads)
+    result = urlfetch.fetch(url, headers=heads, deadline=60)
     content_type = result.headers.get('content-type')
     if content_type: content_type = content_type.split(';')[0].strip()
     if not content_type == 'text/occi':
@@ -538,12 +549,13 @@ Computing Interface - RESTful HTTP Rendering specification.
     """
     messages = []
     headers = {
-        'Accept': 'text/occi'
+        'Accept': 'text/occi',
+        'Cache-control': 'max-age=0',
     }
 
     # retrieval of all kinds, actions and mixins
     
-    result_first = urlfetch.fetch(url + '/.well-known/org/ogf/occi/-/', headers=headers)
+    result_first = urlfetch.fetch(url + '/.well-known/org/ogf/occi/-/', headers=headers, deadline=60)
     if not result_first.status_code in [200]:
         messages.append(
             'GET on query interface failed ('
@@ -551,11 +563,11 @@ Computing Interface - RESTful HTTP Rendering specification.
         )
 
     # retrieval of all kinds, actions and mixins
-    result_second = urlfetch.fetch(url + '/-/', headers=headers)
+    result_second = urlfetch.fetch(url + '/-/', headers=headers, deadline=60)
     if not result_second.status_code in [200]:
         messages.append(
             'GET on query interface failed ('
-            + str(result.status_code) + '): ' + result.content
+            + str(result_second.status_code) + '): ' + result_second.content
         )
 
 
@@ -594,10 +606,13 @@ Computing Interface - Infrastructure specification.
     """
     messages = []
 
-    headers = {'Accept': 'text/plain'}
+    headers = {
+        'Accept': 'text/plain',
+        'Cache-control': 'max-age=0',
+    }
     url += '/-/'
     
-    result = urlfetch.fetch(url, headers=headers)
+    result = urlfetch.fetch(url, headers=headers, deadline=60)
 
     infra_model = []
     for line in result.content.split('\n'):

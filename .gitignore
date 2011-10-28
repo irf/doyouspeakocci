@@ -1,6 +1,3 @@
-*.pyc
 build/
-.settings/
-.pydevproject
-.project
-httplib2
+.idea
+*.pyc
