@@ -15,418 +15,804 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+# along with doyouspeakOCCI.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
 import re
 import uuid
 
 from google.appengine.api import urlfetch
-
-class ComplianceError(Exception):
-    """
-Indicates the failure of one or more test steps during a test function run on
-an OCCI service under inspection.
-
-Attributes:
-  messages -- A list of error messages collected during one test function run
-    """
-    messages = []
-
-    def __init__(self, messages=None, *args, **kwargs):
-        """
-        
-        """
-        Exception.__init__(self, *args, **kwargs)
-        if isinstance(messages, basestring):
-            self.messages = [messages]
-        else:
-            self.messages = messages or []
-
-    def __str__(self):
-        """
-        
-        """
-        return '\n'.join(self.messages)
+from dyso.model import Detail
 
 
-def ctf_341(url):
+__URLFETCH_DEADLINE = 10
+
+__QI_OCCI = '/-/'
+__QI_RFC = '/.well-known/org/ogf/occi/-/'
+
+__MIME_TEXTPLAIN = 'text/plain'
+__MIME_TEXTOCCI = 'text/occi'
+__MIME_TEXTURILIST = 'text/uri-list'
+
+__X_OCCI_LOC = 'x-occi-location'
+
+__DYSO_SCHEME_MIXIN = 'http://doyouspeakocci.appspot.com/mixin#'
+
+__DYSO_TERM_IDO = 'i_do'
+__DYSO_TERM_DOYOU = 'do_you'
+
+__DYSO_CAT_IDO = '%(t)s; scheme="%(s)s"' % {'t': __DYSO_TERM_IDO, 's': __DYSO_SCHEME_MIXIN}
+__DYSO_CAT_DOYOU = '%(t)s; scheme="%(s)s"' % {'t': __DYSO_TERM_DOYOU, 's': __DYSO_SCHEME_MIXIN}
+
+__DYSO_REL_IDO = '%(s)s%(t)s' % {'t': __DYSO_TERM_IDO, 's': __DYSO_SCHEME_MIXIN}
+__DYSO_REL_DOYOU= '%(s)s%(t)s' % {'t': __DYSO_TERM_DOYOU, 's': __DYSO_SCHEME_MIXIN}
+
+__DYSO_LOC_IDO = '/dyso/'
+
+__OCCI_SCHEME_INFRA = 'http://schemas.ogf.org/occi/infrastructure#'
+
+__OCCI_TERM_COMPUTE = 'compute'
+__OCCI_TERM_NET = 'network'
+__OCCI_TERM_NETIFACE = 'networkinterface'
+
+__OCCI_CAT_COMPUTE = '%(t)s; scheme="%(s)s"' % {'t': __OCCI_TERM_COMPUTE, 's': __OCCI_SCHEME_INFRA}
+__OCCI_CAT_NET = '%(t)s; scheme="%(s)s"' % {'t': __OCCI_TERM_NET, 's': __OCCI_SCHEME_INFRA}
+__OCCI_CAT_NETIFACE = '%(t)s; scheme="%(s)s"' % {'t': __OCCI_TERM_NETIFACE, 's': __OCCI_SCHEME_INFRA}
+
+__OCCI_REL_COMPUTE = '%(s)s%(t)s' % {'t': __OCCI_TERM_COMPUTE, 's': __OCCI_SCHEME_INFRA}
+__OCCI_REL_NET = '%(s)s%(t)s' % {'t': __OCCI_TERM_NET, 's': __OCCI_SCHEME_INFRA}
+__OCCI_REL_NETIFACE = '%(s)s%(t)s' % {'t': __OCCI_TERM_NETIFACE, 's': __OCCI_SCHEME_INFRA}
+
+__OCCI_LOC_COMPUTE = '/compute/'
+
+
+def _prettyprint(output):
+    result = 'Status Code: ' + output.status_code + '\n'
+
+    result += 'Header:\n'
+    for k, v in output.headers.iteritems():
+        result += k + ': ' + v + '\n'
+
+    result += '\nContent:\n' + output.content
+
+    return result
+
+
+def _create_details(test, message, response='Response not available.'):
+    details = Detail(test=test)
+    details.message = message
+    details.response = response
+    details.put()
+    return False
+
+
+def _create_headers(**args):
+    result = {
+        'Cache-control': 'max-age=0',
+        'Content-type': __MIME_TEXTOCCI,
+        }
+    result.update(args)
+    return result
+
+
+def ctf_341(test, url, auth=None):
     """
 Tests the query interface as described in section 3.4.1 of the Open Cloud
 Computing Interface - RESTful HTTP Rendering specification.
     """
-    messages = []
-    headers = {
-        'Content-type': 'text/occi',
-        'Accept': 'text/plain',
-        'Cache-control': 'max-age=0',
-    }
+    passed = True
 
-    # retrieval of all kinds, actions and mixins
-    result = urlfetch.fetch(url + '/.well-known/org/ogf/occi/-/', headers=headers, deadline=60)
+    qi_rfc_url = url + __QI_RFC
+
+    # query interface retrieval
+    h = _create_headers(Accept=__MIME_TEXTPLAIN)
+    if auth:
+        h['Authorization'] = auth
+    result = urlfetch.fetch(qi_rfc_url, headers=h)
     if not result.status_code in [200]:
-        messages.append(
-            'GET on query interface failed ('
-            + str(result.status_code) + '): ' + result.content)
+        logging.debug(
+            'test[%(t)s] failed on %(u)s during query interface retrieval (%(s)i)'
+                % {'t': test.name, 'u': qi_rfc_url, 's': result.status_code }
+        )
+        passed = _create_details(test, 'The query interface appears to be missing.', _prettyprint(result))
 
-    # filter based on category
-    get_headers = headers.copy()
-    get_headers['Accept'] = 'text/occi'
-    get_headers['Category'] = 'compute; scheme="http://schemas.ogf.org/occi/infrastructure#"'
-
-    result = urlfetch.fetch(url + '/.well-known/org/ogf/occi/-/', headers=get_headers, deadline=60)
+    # category-based filtering
+    h = _create_headers(Accept=__MIME_TEXTOCCI, Category=__OCCI_CAT_COMPUTE)
+    if auth:
+        h['Authorization'] = auth
+    result = urlfetch.fetch(
+        qi_rfc_url,
+        headers=h,
+        deadline=__URLFETCH_DEADLINE
+    )
 
     if not result.status_code in [200]:
-        messages.append(
-            'Category-based filtering on query interface failed ('
-            + str(result.status_code) + ') ' + result.content)
+        logging.debug(
+            'test[%(t)s] failed on %(u)s during category-based filtering (%(s)i)'
+                % {'t': test.name, 'u': qi_rfc_url, 's': result.status_code }
+        )
+        passed = _create_details(
+            test,
+            'The category-based filtering for term "%(t)s" on the query interface failed.' % {'t': __OCCI_TERM_COMPUTE},
+            _prettyprint(result)
+        )
     if len(result.headers['category'].split(',')) > 1:
-        messages.append(
-            'Filtering on query interface failed: '
-            + 'expected \'http://schemas.ogf.org/occi/infrastructure#compute\' category representation; '
-            + 'received ' + str(result.headers['category']))
+        logging.debug(
+            'test[%(t)s] failed on %(u)s during category-based filtering (%(s)i)'
+                % {'t': test.name, 'u': qi_rfc_url, 's': result.status_code }
+        )
+        passed = _create_details(
+            test,
+            'The category-based filtering for term "%(t)s" on the query interface failed: expected "%(c)s" instances only.'
+                % {'t': __OCCI_TERM_COMPUTE, 'c': __OCCI_CAT_COMPUTE},
+            _prettyprint(result)
+        )
 
-    # remove the mixin if it exists first to avoid conflicts
-    get_headers = headers.copy()
-    get_headers['Category'] = 'my_stuff; scheme="http://example.com/occi/my_stuff#"'
-    result = urlfetch.fetch(url + '/.well-known/org/ogf/occi/-/', headers=get_headers, deadline=60)
+    # cleanup: remove stale instance of test mixin
+    h = _create_headers(Accept=__MIME_TEXTPLAIN, Category=__DYSO_CAT_IDO)
+    if auth:
+        h['Authorization'] = auth
+    result = urlfetch.fetch(
+        qi_rfc_url,
+        headers=h,
+        deadline=__URLFETCH_DEADLINE
+    )
     if result.status_code in [200]:
-        del_heads = headers.copy()
-        del_heads['Category'] = 'my_stuff; scheme="http://example.com/occi/my_stuff#"'
-        urlfetch.fetch(url + '/.well-known/org/ogf/occi/-/', method=urlfetch.DELETE, headers=del_heads, deadline=60)
+        logging.info('Cleanup: removed stale instance of "%(m)s" mixin' % {'m': __DYSO_REL_IDO})
+        h = _create_headers(Accept=__MIME_TEXTPLAIN, Category=__DYSO_CAT_IDO)
+        if auth:
+            h['Authorization'] = auth
+        urlfetch.fetch(
+            qi_rfc_url,
+            method=urlfetch.DELETE,
+            headers=h,
+            deadline=__URLFETCH_DEADLINE
+        )
 
-    # adding a mixin definition
-    post_heads = headers.copy()
-    post_heads['Category'] = 'my_stuff; scheme="http://example.com/occi/my_stuff#"; class="mixin"; rel="http://example.com/occi/something_else#mixin"; location="/my_stuff/"'
-    result = urlfetch.fetch(url + '/.well-known/org/ogf/occi/-/', method=urlfetch.POST, headers=post_heads, deadline=60)
+    # addition of a user defined mixin
+    h = _create_headers(
+        Accept=__MIME_TEXTPLAIN,
+        Category='%(cat)s; class="mixin"; rel="%(rel)s"; location="%(loc)s"'
+            % {'cat': __DYSO_CAT_IDO, 'rel': __DYSO_REL_DOYOU, 'loc': __DYSO_LOC_IDO}
+    )
+    if auth:
+        h['Authorization'] = auth
+    result = urlfetch.fetch(
+        qi_rfc_url,
+        method=urlfetch.POST,
+        headers=h,
+        deadline=__URLFETCH_DEADLINE
+    )
     if not result.status_code in [200]:
-        messages.append(
-            'Addition of user-defined mixin on query interface failed ('
-            + str(result.status_code) + '): ' + result.content)
+        logging.debug(
+            'test[%(t)s::%(i)s] failed on %(u)s during addition of a user-defined mixin (%(s)i)'
+                % {'t': test.name, 'i': test.key(), 'u': qi_rfc_url, 's': result.status_code }
+        )
+        passed = _create_details(
+            test,
+            'Addition of user-defined mixin on query interface failed.',
+            _prettyprint(result)
+        )
 
-    # removing a mixin definition
-    delete_heads = headers.copy()
-    delete_heads['Category'] = 'my_stuff; scheme="http://example.com/occi/my_stuff#"; class="mixin";'
-    result = urlfetch.fetch(url + '/.well-known/org/ogf/occi/-/', method=urlfetch.DELETE, headers=delete_heads, deadline=60)
+    # removal of a user-defined mixin
+    h = _create_headers(Accept=__MIME_TEXTPLAIN, Category=__DYSO_CAT_IDO)
+    if auth:
+        h['Authorization'] = auth
+    result = urlfetch.fetch(
+        qi_rfc_url,
+        method=urlfetch.DELETE,
+        headers=h,
+        deadline=__URLFETCH_DEADLINE
+    )
     if not result.status_code in [200]:
-        messages.append(
-            'Removal of user-defined mixin on query interface failed ('
-            + str(result.status_code) + '): ' + result.content)
+        logging.debug(
+            'test[%(t)s::%(i)s] failed on %(u)s during removal of a user-defined mixin (%(s)i)'
+                % {'t': test.name, 'i': test.key(), 'u': qi_rfc_url, 's': result.status_code }
+        )
+        passed = _create_details(test, 'Removal of user-defined mixin on query interface failed.', _prettyprint(result))
 
-    if messages:
-        raise ComplianceError(messages)
+    return passed
 
 
-def ctf_342_343(url):
+def ctf_342_343(test, url, auth=None):
     """
 Tests operations on mixins or kinds as described in section 3.4.2 and 3.4.3
 of the Open Cloud Computing Interface - RESTful HTTP Rendering specification.
     """
-    messages = []
-    headers = {
-        'Content-Type': 'text/occi',
-        'Accept': 'text/occi',
-        'Cache-control': 'max-age=0',
-    }
-    unique_hostname = "doyouspeakocci::" + uuid.uuid4().__str__()
+    passed = True
 
-    # POST some compute instances
-    post_heads = headers.copy()
-    post_heads['Category'] = 'compute;scheme="http://schemas.ogf.org/occi/infrastructure#"'
-    urlfetch.fetch(url, method=urlfetch.POST, headers=post_heads, deadline=60)
-    post_heads['X-OCCI-Attribute'] = 'occi.compute.hostname="' + unique_hostname + '"'
-    urlfetch.fetch(url, method=urlfetch.POST, headers=post_heads, deadline=60)
+    hostname = "dyso::" + uuid.uuid4().__str__()
 
-    # get them as described in section 3.4.2 - text/plain and text/uri-list should contain the same result
-    result_textocci = urlfetch.fetch(url + '/compute/', headers=headers, deadline=60)
+    # prepare: creation of compute instances
+    h = _create_headers(Accept=__MIME_TEXTOCCI, Category=__OCCI_CAT_COMPUTE)
+    if auth:
+        h['Authorization'] = auth
+    result = urlfetch.fetch(
+        url,
+        method=urlfetch.POST,
+        headers=h,
+        deadline=__URLFETCH_DEADLINE
+    )
+    logging.debug(
+        'setup[%(t)s::%(i)s]: creation of compute instance %(u)s succeeded (%(s)i)'
+            % {'t': test.name, 'i': test.key(), 'u': result.headers['location'], 's': result.status_code }
+    )
 
-    get_heads = {'Accept': 'text/uri-list', 'Cache-control': 'max-age=0'}
-    result_texturilist = urlfetch.fetch(url + '/compute/', headers=get_heads, deadline=60)
+    h = _create_headers(Accept=__MIME_TEXTOCCI, Category=__OCCI_CAT_COMPUTE)
+    if auth:
+        h['Authorization'] = auth
+    h['X-OCCI-Attribute'] = 'occi.compute.hostname="' + hostname + '"'
+    result = urlfetch.fetch(
+        url,
+        method=urlfetch.POST,
+        headers=h,
+        deadline=__URLFETCH_DEADLINE)
+    logging.debug(
+        'setup[%(t)s::%(i)s]: creation of compute instance %(u)s succeeded (%(s)i)'
+            % {'t': test.name, 'i': test.key(), 'u': result.headers['location'], 's': result.status_code }
+    )
+
+
+    # comparison of text/plain and text/occi rendering
+    h = _create_headers(Accept=__MIME_TEXTOCCI)
+    if auth:
+        h['Authorization'] = auth
+    result_textocci = urlfetch.fetch(
+        url + __OCCI_LOC_COMPUTE,
+        headers=h,
+        deadline=__URLFETCH_DEADLINE
+    )
+
+    h = _create_headers(Accept=__MIME_TEXTURILIST)
+    if auth:
+        h['Authorization'] = auth
+    result_texturilist = urlfetch.fetch(
+        url + __OCCI_LOC_COMPUTE,
+        headers=h,
+        deadline=__URLFETCH_DEADLINE
+    )
 
     content = [item.strip() for item in result_texturilist.content.split('\n')]
-    for item in result_textocci.headers['x-occi-location'].split(','):
+    for item in result_textocci.headers[__X_OCCI_LOC].split(','):
         if item.strip() not in content:
-            messages.append('X-OCCI-Location and uri-list do not return the same values for the compute collection.')
+            logging.debug(
+                'test[%(t)s::%(i)s] failed on comparison of "%(p)s"  and "%(o)s" rendering'
+                    % {'t': test.name, 'i': test.key(), 'p': __MIME_TEXTPLAIN, 'o': __MIME_TEXTOCCI}
+            )
+            passed = _create_details(
+                test,
+                'X-OCCI-Location and uri-list do not return the same values for the compute collection.'
+            )
 
-    # trigger action on collection
-    action_heads = headers.copy()
-    action_heads['Category'] = 'start; scheme="http://schemas.ogf.org/occi/infrastructure/compute/action#"'
-    result = urlfetch.fetch(url + '/compute/?action=start', method=urlfetch.POST, headers=action_heads, deadline=60)
+    # action triggering on collection
+    h = _create_headers(
+        Accept=__MIME_TEXTOCCI,
+        Category='start; scheme="http://schemas.ogf.org/occi/infrastructure/compute/action#"'
+    )
+    if auth:
+        h['Authorization'] = auth
+    result = urlfetch.fetch(
+        url + '/compute/?action=start',
+        method=urlfetch.POST,
+        headers=h,
+        deadline=__URLFETCH_DEADLINE)
     if result.status_code != 200:
-        messages.append(
-            'Action triggering on collection failed: response was "' + repr(result) + '"'
+        logging.debug(
+            'test[%(t)s::%(i)s] failed on action triggering on collection (%(s)i)'
+                % {'t': test.name, 'i': test.key(), 's': result.status_code}
+        )
+        passed = _create_details(test, 'Action triggering on collection failed', _prettyprint(result))
+
+    # creation of a user defined mixin
+    computeinstance_first = result_textocci.headers[__X_OCCI_LOC].split(', ')[0]
+    computeinstance_second = result_textocci.headers[__X_OCCI_LOC].split(', ')[1]
+
+    h = _create_headers(
+        Accept=__MIME_TEXTPLAIN,
+        Category='%(cat)s; class="mixin"; rel="%(rel)s"; location="%(loc)s"'
+            % {'cat': __DYSO_CAT_IDO, 'rel': __DYSO_REL_DOYOU, 'loc': __DYSO_LOC_IDO }
+    )
+    if auth:
+        h['Authorization'] = auth
+    result = urlfetch.fetch(
+        url + __QI_OCCI,
+        method=urlfetch.POST,
+        headers=h,
+        deadline=__URLFETCH_DEADLINE
+    )
+    if result.status_code != 200:
+        logging.debug(
+            'test[%(t)s::%(i)s] failed on creation of a user-defined mixin (%(s)i)'
+                % {'t': test.name, 'i': test.key(), 's': result.status_code}
+        )
+        passed = _create_details(test, 'Unable to create a user-defined mixin', _prettyprint(result))
+
+    # attachment of a compute instance
+    h = _create_headers(Accept=__MIME_TEXTOCCI)
+    if auth:
+        h['Authorization'] = auth
+    h['X-OCCI-Location'] = computeinstance_first
+    loc = url + __DYSO_LOC_IDO
+    result = urlfetch.fetch(loc, method=urlfetch.POST, headers=h, deadline=__URLFETCH_DEADLINE)
+    if result.status_code != 200:
+        logging.debug(
+            'test[%(t)s::%(i)s] failed on attachment of compute instance <%(u)s> to <%(m)s> (%(s)i)'
+                % {'t': test.name, 'i': test.key(), 'u': computeinstance_first, 'm': loc, 's': result.status_code}
+        )
+        passed = _create_details(
+            test,
+            'Unable to add compute instance <%(c)s> to user-defined mixin <%(m)s>'
+                % {'c': computeinstance_first, 'm': loc},
+            _prettyprint(result)
         )
 
-    # create a user defined mixin and add a compute instance
-    computeinstance_first = result_textocci.headers['x-occi-location'].split(', ')[0]
-    logging.debug(computeinstance_first)
-    computeinstance_second = result_textocci.headers['x-occi-location'].split(', ')[1]
-    logging.debug(computeinstance_second)
-
-    post_heads = headers.copy()
-    post_heads['Category']\
-        = 'my_stuff; scheme="http://example.com/occi/my_stuff#"; class="mixin"; rel="http://example.com/occi/something_else#mixin"; location="/my_stuff/"'
-    result = urlfetch.fetch(url + '/-/', method=urlfetch.POST, headers=post_heads, deadline=60)
-    if result.status_code != 200:
-        messages.append('Unable to create a user-defined mixin: response was "' + repr(result) + '"')
-
-    post_heads = headers.copy()
-    post_heads['X-OCCI-Location'] = computeinstance_first
-    result = urlfetch.fetch(url + '/my_stuff/', method=urlfetch.POST, headers=post_heads, deadline=60)
-    if result.status_code != 200:
-        messages.append('Unable to add a kind to a user-defined mixin: response was "' + repr(result) + '"')
-
     # check if the user defined mixin was added to the compute instance
-    result = urlfetch.fetch(computeinstance_first, headers=headers, deadline=60)
-    logging.debug(repr(result.headers))
-    if result.headers['category'].find('my_stuff') is - 1:
-        messages.append('Adding mixin to resource seems to be broken: response was "' + repr(result) + '"')
+    h = _create_headers(Accept=__MIME_TEXTOCCI)
+    if auth:
+        h['Authorization'] = auth
+    result = urlfetch.fetch(
+        computeinstance_first,
+        headers=h,
+        deadline=__URLFETCH_DEADLINE
+    )
+    if result.headers['category'].find(__DYSO_TERM_IDO) is - 1:
+        logging.debug(
+            'test[%(t)s::%(i)s] failed on check if mixin "%(m)s" was added to compute instance <%(u)s> (%(s)i)'
+                % {'t': test.name, 'i': test.key(), 'u': computeinstance_first, 'm': __DYSO_REL_IDO, 's': result.status_code}
+        )
+        passed = _create_details(test, 'Adding mixin to resource seems to be broken.', _prettyprint(result))
 
-    # check if a get on the location of the user-defined mixin return the compute_loc
-    result = urlfetch.fetch(url, headers=headers, deadline=60)
-    if not len(result.headers['x-occi-location'].split(',')):
-        messages.append('Mixin collection unexpectedly empty: response was "' + repr(result) + '"')
+    # check whether mixin location contains compute location
+    h = _create_headers(Accept=__MIME_TEXTOCCI)
+    if auth:
+        h['Authorization'] = auth
+    result = urlfetch.fetch(url, headers=h, deadline=__URLFETCH_DEADLINE)
+    if not len(result.headers[__X_OCCI_LOC].split(',')):
+        logging.debug(
+            'test[%(t)s::%(i)s] failed on check whether mixin location <%(m)s> contains compute location <%(u)s>'
+                % {'t': test.name, 'i': test.key(), 'u': computeinstance_first, 'm': loc}
+        )
+        passed = _create_details(test, 'Mixin collection unexpectedly empty.', _prettyprint(result))
 
-    # replace the collection and only add compute_loc2 as the new collection
-    put_heads = headers.copy()
-    put_heads['X-OCCI-Location'] = computeinstance_second
-    result = urlfetch.fetch(url + '/my_stuff/', method=urlfetch.PUT, headers=put_heads, deadline=60)
+    # run full update on mixin collection locations, replacing old members
+    h = _create_headers(Accept=__MIME_TEXTOCCI)
+    if auth:
+        h['Authorization'] = auth
+    h['X-OCCI-Location'] = computeinstance_second
+    result = urlfetch.fetch(url + __DYSO_LOC_IDO, method=urlfetch.PUT, headers=h, deadline=__URLFETCH_DEADLINE)
     if result.status_code != 200:
-        messages.append('Running full update on resource seems to be broken: response was "' + repr(result) + '"')
+        logging.debug(
+            'test[%(t)s::%(i)s] failed on full update of mixin collection <%(m)s> (%(s)s)'
+                % {'t': test.name, 'i': test.key(), 'm': loc, 's': result.status_code}
+        )
+        passed = _create_details(test, 'Running full update on resource seems to be broken.', _prettyprint(result))
 
-    result = urlfetch.fetch(url + '/my_stuff/', headers=headers, deadline=60)
-    if result.headers.get('x-occi-location') != computeinstance_second:
-        messages.append('Running full udpate on resource seems to be broken: response was "' + repr(result) + '"')
+    # check whether replacement succeeded
+    h = _create_headers(Accept=__MIME_TEXTOCCI)
+    if auth:
+        h['Authorization'] = auth
+    result = urlfetch.fetch(
+        url + __DYSO_LOC_IDO,
+        headers=h,
+        deadline=__URLFETCH_DEADLINE
+    )
+    if result.headers.get(__X_OCCI_LOC) != computeinstance_second:
+        logging.debug(
+            'test[%(t)s::%(i)s] failed replacement of member instances in mixin collection <%(m)s>'
+                % {'t': test.name, 'i': test.key(), 'm': loc}
+        )
+        passed = _create_details(
+            test,
+            'The replacement of member instances in the mixin collection <%(m)s> failed.',
+            _prettyprint(result)
+        )
 
-    # filter on /compute/ based on category my_stuff...
-    get_heads = headers.copy()
-    get_heads['Category'] = 'my_stuff; scheme="http://example.com/occi/my_stuff#"'
-    result = urlfetch.fetch(url + '/compute/', headers=get_heads, deadline=60)
-    if result.headers.get('x-occi-location') != computeinstance_second:
-        messages.append('Category-based filtering seems to be broken:  response was "' + repr(result) + '"')
+    # filtering /compute/ using the test mixin
+    h = _create_headers(Accept=__MIME_TEXTOCCI, Category=__DYSO_CAT_IDO)
+    if auth:
+        h['Authorization'] = auth
+    result = urlfetch.fetch(
+        url + __OCCI_LOC_COMPUTE,
+        headers=h,
+        deadline=__URLFETCH_DEADLINE
+    )
+    if result.headers.get(__X_OCCI_LOC) != computeinstance_second:
+        logging.debug(
+            'test[%(t)s::%(i)s] failed on filtering <%(u)s> using mixin "%(m)s"'
+                % {'t': test.name, 'i': test.key(), 'u': __OCCI_LOC_COMPUTE,  'm': __DYSO_REL_IDO}
+        )
+        passed = _create_details(test, 'Category-based filtering seems to be broken.', _prettyprint(result))
 
-    # filter on /copmute/ based on attribute and prev set hostname...
-    get_heads = headers.copy()
-    get_heads['X-OCCI-Attribute'] = 'occi.compute.hostname="' + unique_hostname + '"'
-    result = urlfetch.fetch(url + '/compute/', headers=get_heads, deadline=60)
-    if not result.headers.get('x-occi-location') or len(result.headers['x-occi-location'].split()) != 1:
-        messages.append('Attribute-based filtering seems to be broken: response was "' + repr(result) + '"')
+    # filtering on /compute/ using the test attribute
+    h = _create_headers(Accept=__MIME_TEXTOCCI)
+    if auth:
+        h['Authorization'] = auth
+    h['X-OCCI-Attribute'] = 'occi.compute.hostname="' + hostname + '"'
+    result = urlfetch.fetch(url + __OCCI_LOC_COMPUTE, headers=h, deadline=__URLFETCH_DEADLINE)
+    if not result.headers.get(__X_OCCI_LOC) or len(result.headers[__X_OCCI_LOC].split()) != 1:
+        logging.debug(
+            'test[%(t)s::%(i)s] failed on filtering using attributes'
+                % {'t': test.name, 'i': test.key()}
+        )
+        passed = _create_details(test, 'Attribute-based filtering seems to be broken', _prettyprint(result))
 
-    # now also delete the second compute
-    delete_heads = headers.copy()
-    delete_heads['X-OCCI-Location'] = computeinstance_second
-    result = urlfetch.fetch(url + '/my_stuff/', method=urlfetch.DELETE, headers=delete_heads, deadline=60)
+    # deletion of last item in mixin collection
+    h = _create_headers(Accept=__MIME_TEXTOCCI)
+    if auth:
+        h['Authorization'] = auth
+    h['X-OCCI-Location'] = computeinstance_second
+    result = urlfetch.fetch(url + __DYSO_LOC_IDO, method=urlfetch.DELETE, headers=h, deadline=__URLFETCH_DEADLINE)
     if result.status_code != 200:
-        raise ComplianceError('Unable to remove last entity from mixin: response was "' + repr(result) + '"')
+        logging.debug(
+            'test[%(t)s::%(i)s] failed on deletion of last item in mixin collection (%(s)s)'
+                % {'t': test.name, 'i': test.key(), 's': result.status_code}
+        )
+        passed = _create_details(test, 'Unable to remove last entity from mixin', _prettyprint(result))
 
-    result = urlfetch.fetch(url + '/my_stuff/', headers=headers, deadline=60)
-    if hasattr(result.headers, 'x-occi-location'):
-        messages.append('Unexpected item in collection: response was "' + repr(result) + '"')
+    # check whether deletion was successful
+    h = _create_headers(Accept=__MIME_TEXTOCCI)
+    if auth:
+        h['Authorization'] = auth
+    result = urlfetch.fetch(
+        url + __DYSO_LOC_IDO,
+        headers=h,
+        deadline=__URLFETCH_DEADLINE
+    )
+    if hasattr(result.headers, __X_OCCI_LOC):
+        logging.debug(
+            'test[%(t)s::%(i)s] failed on check whether deletion of last mixin collection item was successful'
+                % {'t': test.name, 'i': test.key()}
+        )
+        passed = _create_details(test, 'Unexpected item in collection.', _prettyprint(result))
 
-    # finally delete the mixin
-    put_heads = headers.copy()
-    put_heads['Category'] = 'my_stuff; scheme="http://example.com/occi/my_stuff#"; class="mixin"'
-    result = urlfetch.fetch(url + '/-/', method=urlfetch.DELETE, headers=put_heads, deadline=60)
+    # deletion of mixin
+    h = _create_headers(Accept=__MIME_TEXTOCCI, Category=__DYSO_CAT_IDO)
+    if auth:
+        h['Authorization'] = auth
+    result = urlfetch.fetch(
+        url + __QI_OCCI,
+        method=urlfetch.DELETE,
+        headers=h,
+        deadline=__URLFETCH_DEADLINE
+    )
     if result.status_code != 200:
-        raise ComplianceError('Unable to delete a user-defined mixin: response was "' + repr(result) + '"')
+        logging.debug(
+            'test[%(t)s::%(i)s] failed on deletion of mixin "%(m)s" (%(s)s)'
+                % {'t': test.name, 'i': test.key(), 'm': __DYSO_REL_IDO, 's': result.status_code}
+        )
+        passed = _create_details(test, 'Unable to delete user-defined mixin.', _prettyprint(result))
 
     # and delete all compute instances
-    del_heads = headers.copy()
-    result = urlfetch.fetch(url + '/compute/', method=urlfetch.DELETE, headers=del_heads, deadline=60)
+    h = _create_headers(Accept=__MIME_TEXTOCCI)
+    if auth:
+        h['Authorization'] = auth
+    result = urlfetch.fetch(
+        url + __OCCI_LOC_COMPUTE,
+        method=urlfetch.DELETE,
+        headers=h,
+        deadline=__URLFETCH_DEADLINE
+    )
     if result.status_code != 200:
-        raise ComplianceError('Unable to delete a compute instances: response was "' + repr(result) + '"')
+        logging.debug(
+            'test[%(t)s::%(i)s] failed on deletion of compute instances at <%(u)s> (%(s)s)'
+                % {'t': test.name, 'i': test.key(), 'u': url + __OCCI_LOC_COMPUTE, 's': result.status_code}
+        )
+        passed = _create_details(test, 'Unable to delete compute instance.', _prettyprint(result))
 
-    if messages:
-        raise ComplianceError(messages)
+    return passed
+        
 
-
-def ctf_344(url):
+def ctf_344(test, url, auth=None):
     """
-Tests operations on resource instances as described in section 3.4.4 of the
+Operations on resource instances as described in section 3.4.4 of the
 Open Cloud Computing Interface - RESTful HTTP Rendering specification.
     """
-    messages = []
-    headers = {
-        'Content-Type': 'text/occi',
-        'Accept': 'text/occi',
-        'Cache-control': 'max-age=0',
-    }
+    passed = True
+    
+    hostname = "dyso::" + uuid.uuid4().__str__()
 
     # POST to create
-    loc = None
-    post_heads = headers.copy()
-    post_heads['Category'] = 'compute;scheme="http://schemas.ogf.org/occi/infrastructure#"'
-    result = urlfetch.fetch(url, method=urlfetch.POST, headers=post_heads, deadline=60)
+    h = _create_headers(Accept=__MIME_TEXTOCCI, Category=__OCCI_CAT_COMPUTE)
+    if auth:
+        h['Authorization'] = auth
+    result = urlfetch.fetch(
+        url,
+        method=urlfetch.POST,
+        headers=h,
+        deadline=__URLFETCH_DEADLINE
+    )
     if result.status_code == 201 or (result.status_code == 200 and 'location' in result.headers):
-        loc = result.headers['location']
+        loc_post = result.headers['location']
     elif result.status_code == 200:
         logging.warn('Seems like OCCI server responded with 200...not 201 and location...')
-        result = urlfetch.fetch(url + '/compute/', headers=headers)
-        loc = result.headers['x-occi-location'].split(',')[0].strip()
+        h = _create_headers(Accept=__MIME_TEXTOCCI)
+        if auth:
+            h['Authorization'] = auth
+        result = urlfetch.fetch(
+            url + __OCCI_LOC_COMPUTE,
+            headers=h,
+            deadline=__URLFETCH_DEADLINE
+        )
+        loc_post = result.headers[__X_OCCI_LOC].split(',')[0].strip()
     else:
-        messages.append('Creation of "compute" kind instance failed: response was "' + repr(result) + '"')
+        passed = _create_details(test, 'Creation of "compute" kind instance failed.', _prettyprint(result))
+        return passed
 
     # trigger action...
-    result = urlfetch.fetch(loc, headers=headers, deadline=60)
+    h = _create_headers(Accept=__MIME_TEXTOCCI)
+    if auth:
+        h['Authorization'] = auth
+    result = urlfetch.fetch(loc_post, headers=h, deadline=__URLFETCH_DEADLINE)
     links = result.headers['link'].split(',')
     for link in links:
         if link.find('?action=start>') != -1:
-            action_url = url + link[1:link.find('>')]
-            action_heads = headers.copy()
-            action_heads['Category'] = 'start; scheme="http://schemas.ogf.org/occi/infrastructure/compute/action#"'
-            result = urlfetch.fetch(action_url, method=urlfetch.POST, headers=action_heads, deadline=60)
+            action = url + link[1:link.find('>')]
+            h = _create_headers(
+                Accept=__MIME_TEXTOCCI,
+                Category='start; scheme="http://schemas.ogf.org/occi/infrastructure/compute/action#"'
+            )
+            if auth:
+                h['Authorization'] = auth
+            result = urlfetch.fetch(
+                action,
+                method=urlfetch.POST,
+                headers=h,
+                deadline=__URLFETCH_DEADLINE)
             if not result.status_code == 200:
-                messages.append('Triggering of action failed: response was "' + repr(result) + '"')
+                passed = _create_details(test, 'Triggering of action failed.', _prettyprint(result))
         else:
             logging.warn('Start action not applicable - might be correct...')
 
     # POST - partial update
-    post_heads = headers.copy()
-    post_heads['X-OCCI-Attribute'] = 'occi.compute.hostname="foo"'
-    result = urlfetch.fetch(loc, method=urlfetch.POST, headers=post_heads, deadline=60)
+    h = _create_headers(Accept=__MIME_TEXTOCCI)
+    if auth:
+        h['Authorization'] = auth
+    h['X-OCCI-Attribute'] = 'occi.compute.hostname="' + hostname + '"'
+    result = urlfetch.fetch(loc_post, method=urlfetch.POST, headers=h, deadline=__URLFETCH_DEADLINE)
     if not result.status_code == 200:
-        messages.append('Update on resource <' + loc + '> failed: response was "' + repr(result) + '"')
+        passed = _create_details(test, 'Update on resource <%(loc)s> failed.' % {'loc': loc_post}, _prettyprint(result))
 
     # PUT create
-    put_url = url + '/123'
-    put_heads = headers.copy()
-    put_heads['Category'] = 'compute;scheme="http://schemas.ogf.org/occi/infrastructure#"'
-    put_heads['X-OCCI-Attribute'] = 'example.test="foo"'
-    result = urlfetch.fetch(put_url, method=urlfetch.PUT, headers=put_heads, deadline=60)
-    # RN: A server is allowed to refuse the request. #3.4.4 footnote 6.
-    if result.status_code == 400:
-        logging.warn('Server refused PUT create at <' + put_url + '>, this is OK according to section 3.4.4')
-        put_url = loc
+    loc_put = url + '/123'
+
+    h = _create_headers(Accept=__MIME_TEXTOCCI, Category=__OCCI_CAT_COMPUTE)
+    if auth:
+        h['Authorization'] = auth
+    h['X-OCCI-Attribute'] = 'com.appspot.doyouspeakocci.do_you="i_do"'
+    result = urlfetch.fetch(loc_put, method=urlfetch.PUT, headers=h, deadline=__URLFETCH_DEADLINE)
+    if result.status_code == 400: # RN: A server is allowed to refuse the request. #3.4.4 footnote 6.
+        logging.warn('Server refused PUT create at <%(u)s>, this is OK according to section 3.4.4.' % {'u': loc_put})
+        loc_put = loc_post
     elif not result.status_code in [200, 201]:
-        messages.append('Adding named "compute" kind instance at <' + put_url + '> failed: response was "' + repr(result) + '"')
+        passed = _create_details(
+            test,
+            'Adding named "compute" kind instance at <%(loc)s> failed.' % {'loc': loc_put},
+            _prettyprint(result)
+        )
 
     # PUT for full update
-    put_heads = headers.copy()
-    put_heads['Category'] = 'compute;scheme="http://schemas.ogf.org/occi/infrastructure#"'
-    put_heads['X-OCCI-Attribute'] = 'occi.core.title="My Compute instance"'
-    result = urlfetch.fetch(put_url, method=urlfetch.PUT, headers=put_heads, deadline=60)
+    h = _create_headers(Accept=__MIME_TEXTOCCI, Category=__OCCI_CAT_COMPUTE)
+    if auth:
+        h['Authorization'] = auth
+    h['X-OCCI-Attribute'] = 'occi.core.title="doyouspeakOCCI Compute Instance"'
+    result = urlfetch.fetch(loc_put, method=urlfetch.PUT, headers=h, deadline=__URLFETCH_DEADLINE)
     if not result.status_code == 200:
-        messages.append('Full update on "compute" kind instance at <' + put_url + '> failed: response was "' + repr(result) + '"')
+        passed = _create_details(
+            test,
+            'Full update on "compute" kind instance at <%(loc)s> failed.' % {'loc': loc_put},
+            _prettyprint(result)
+        )
 
     # GET
-    result = urlfetch.fetch(loc, headers=headers, deadline=60)
+    h = _create_headers(Accept=__MIME_TEXTOCCI)
+    if auth:
+        h['Authorization'] = auth
+    result = urlfetch.fetch(loc_post, headers=h, deadline=__URLFETCH_DEADLINE)
     if not result.status_code == 200:
-        messages.append('Resource retrieval at <' + loc + '> failed: response was "' + repr(result))
+        passed = _create_details(
+            test,
+            'Resource retrieval at <%(loc)s> failed.' % {'loc': loc_post},
+            _prettyprint(result)
+        )
 
     # DELETE
-    result = urlfetch.fetch(loc, method=urlfetch.DELETE, headers=headers, deadline=60)
+    h = _create_headers(Accept=__MIME_TEXTOCCI)
+    if auth:
+        h['Authorization'] = auth
+    result = urlfetch.fetch(
+        loc_post,
+        method=urlfetch.DELETE,
+        headers=h,
+        deadline=__URLFETCH_DEADLINE
+    )
     if not result.status_code == 200:
-        messages.append('Resource deletion of <' + loc + '> failed: response was "' + repr(result))
-    if loc != put_url:
-        result = urlfetch.fetch(put_url, method=urlfetch.DELETE, headers=headers, deadline=60)
+        passed = _create_details(
+            test,
+            'Resource deletion of <%(loc)s> failed.' % {'loc': loc_post},
+            _prettyprint(result)
+        )
+    if loc_post != loc_put:
+        h = _create_headers(Accept=__MIME_TEXTOCCI)
+        if auth:
+            h['Authorization'] = auth
+        result = urlfetch.fetch(
+            loc_put,
+            method=urlfetch.DELETE,
+            headers=h,
+            deadline=__URLFETCH_DEADLINE
+        )
         if not result.status_code == 200:
-            messages.append('Resource deletion of <' + loc + '> failed: response was "' + repr(result))
+            passed = _create_details(
+                test,
+                'Resource deletion of <%(loc)s> failed.' % {'loc': loc_post},
+                _prettyprint(result)
+            )
 
-    if messages:
-        raise ComplianceError(messages)
+    return passed
 
 
-def ctf_345(url):
+def ctf_345(test, url, auth=None):
     """
-Tests the handling of link instances as described in section 3.4.5 of the Open
+Handling of link instances as described in section 3.4.5 of the Open
 Cloud Computing Interface - RESTful HTTP Rendering specification.
     """
-    messages = []
-    headers = {
-        'Content-Type': 'text/occi',
-        'Cache-control': 'max-age=0',
-    }
+    passed = True
 
     # create compute
-    compute_heads = headers.copy()
-    compute_heads['Category'] = 'compute;scheme="http://schemas.ogf.org/occi/infrastructure#"'
-    result = urlfetch.fetch(url, method=urlfetch.POST, headers=compute_heads, deadline=60)
+    h = _create_headers(Accept=__MIME_TEXTOCCI, Category=__OCCI_CAT_COMPUTE)
+    if auth:
+        h['Authorization'] = auth
+    result = urlfetch.fetch(
+        url,
+        method=urlfetch.POST,
+        headers=h,
+        deadline=__URLFETCH_DEADLINE
+    )
     if 'location' not in result.headers and result.status_code not in (201, 200):
-        logging.warn('Creation failed - this might be okay - please examine output! ' + repr(result) + '"')
+        logging.warn('Creation failed - this might be okay - please examine output! ' , _prettyprint(result))
         logging.warn('Test needs to be updated to discover location by doing a GET on /compute/')
-        return 'UNDEFINED'
-    compute_loc = result.headers['location']
+        return passed
+    loc_compute = result.headers['location']
 
     # create network
-    network = headers.copy()
-    network['Category'] = 'network;scheme="http://schemas.ogf.org/occi/infrastructure#"'
-    result = urlfetch.fetch(url, method=urlfetch.POST, headers=network, deadline=60)
+    h = _create_headers(Accept=__MIME_TEXTOCCI, Category=__OCCI_CAT_NET)
+    if auth:
+        h['Authorization'] = auth
+    result = urlfetch.fetch(
+        url,
+        method=urlfetch.POST,
+        headers=h,
+        deadline=__URLFETCH_DEADLINE
+    )
     if result.status_code not in [200, 201]:
-        logging.warn('Creation failed - this might be okay - please examine output! ' + repr(result) + '"')
-    network_loc = result.headers['location']
+        logging.warn('Creation failed - this might be okay - please examine output! ' , _prettyprint(result))
+    loc_network = result.headers['location']
 
     # now create a network link...
-    link = headers.copy()
-    link['Category'] = 'networkinterface;scheme="http://schemas.ogf.org/occi/infrastructure#"'
-    link['X-OCCI-Attribute'] = 'occi.core.source="' + compute_loc + '", occi.core.target="' + network_loc + '"'
-    result = urlfetch.fetch(url, method=urlfetch.POST, headers=link, deadline=60)
+    h = _create_headers(Accept=__MIME_TEXTOCCI, Category=__OCCI_CAT_NETIFACE)
+    if auth:
+        h['Authorization'] = auth
+    h['X-OCCI-Attribute'] = 'occi.core.source="' + loc_compute + '", occi.core.target="' + loc_network + '"'
+    result = urlfetch.fetch(
+        url,
+        method=urlfetch.POST,
+        headers=h,
+        deadline=__URLFETCH_DEADLINE)
     if result.status_code not in [200, 201]:
-        messages.append('Creation of a "networkinterface" link instance failed: response was "' + repr(result) + '"')
+        passed = _create_details(
+            test,
+            'Creation of a "%(t)s" link instance failed.' % {'t': __OCCI_TERM_NETIFACE},
+            _prettyprint(result)
+        )
     link_loc = result.headers['location']
 
     # check if links has source, target attributes
-    get_heads = headers.copy()
-    get_heads['Accept'] = 'text/occi'
-    result = urlfetch.fetch(link_loc, headers=get_heads, deadline=60)
+    h = _create_headers(Accept=__MIME_TEXTOCCI)
+    if auth:
+        h['Authorization'] = auth
+    result = urlfetch.fetch(link_loc, headers=h, deadline=__URLFETCH_DEADLINE)
     if result.headers.has_key('x-occi-attribute'):
-        if result.headers['x-occi-attribute'].find('occi.core.source') == -1 or result.headers['x-occi-attribute'].find('occi.core.target') == -1:
-            messages.append('Missing "source" and/or "target" attribute on link: response was "' + repr(result) + '"')
+        if result.headers['x-occi-attribute'].find('occi.core.source') == -1\
+        or result.headers['x-occi-attribute'].find('occi.core.target') == -1:
+            passed = _create_details(test, 'Missing "source" and/or "target" attribute on link.' , _prettyprint(result))
     else:
-        messages.append('Link retrieval seems to be broken: response was "' + repr(result) + '"')
+        passed = _create_details(test, 'Link retrieval seems to be broken.' , _prettyprint(result))
 
     # 1st cleanup...
-    result = urlfetch.fetch(compute_loc, method=urlfetch.DELETE, headers=headers, deadline=60)
+    h = _create_headers(Accept=__MIME_TEXTOCCI)
+    if auth:
+        h['Authorization'] = auth
+    result = urlfetch.fetch(
+        loc_compute,
+        method=urlfetch.DELETE,
+        headers=h,
+        deadline=__URLFETCH_DEADLINE
+    )
     if not result.status_code == 200:
-        messages.append('Resource deletion of <' + compute_loc + '> failed: response was "' + repr(result))
+        passed = _create_details(
+            test,
+            'Resource deletion of <%(loc)s> failed.' % {'loc': loc_compute},
+            _prettyprint(result)
+        )
 
     # now create compute again but with inline...
-    compute_heads = headers.copy()
-    compute_heads['Category'] = 'compute;scheme="http://schemas.ogf.org/occi/infrastructure#"'
-    compute_heads['Link'] = '<' + network_loc + '>; rel="http://schemas.ogf.org/occi/infrastructure#network"; category="http://schemas.ogf.org/occi/infrastructure#networkinterface";'
-
-    result = urlfetch.fetch(url, method=urlfetch.POST, headers=compute_heads, deadline=60)
+    h = _create_headers(Accept=__MIME_TEXTOCCI, Category=__OCCI_CAT_COMPUTE)
+    if auth:
+        h['Authorization'] = auth
+    h['Link'] = '<%(loc)s>; rel="%(rel)s"; category="%(cat)s";'\
+        % {'loc': loc_network, 'rel': __OCCI_REL_NET, 'cat': __OCCI_REL_NETIFACE}
+    result = urlfetch.fetch(url, method=urlfetch.POST, headers=h, deadline=__URLFETCH_DEADLINE)
     if result.status_code not in [200, 201]:
-        logging.warn('Creation failed - this might be okay - please examine output! ' + repr(result) + '"')
-    compute_loc = result.headers['location']
+        logging.warn('Creation failed - this might be okay - please examine output! ' , _prettyprint(result))
+    loc_compute = result.headers['location']
 
     # Now check if compute has inline link rendering...
-    get_heads = headers.copy()
-    get_heads['Accept'] = 'text/occi'
-    result = urlfetch.fetch(compute_loc, headers=get_heads, deadline=60)
+    h = _create_headers(Accept=__MIME_TEXTOCCI)
+    if auth:
+        h['Authorization'] = auth
+    result = urlfetch.fetch(loc_compute, headers=h, deadline=__URLFETCH_DEADLINE)
     if not result.headers.has_key('link'):
-        messages.append('Inline link rendering for "compute" resource seems to be missing: response was "' + repr(result) + '"')
+        passed = _create_details(
+            test,
+            'Inline link rendering for "compute" resource seems to be missing.'
+            , _prettyprint(result)
+        )
 
     # 2nd cleanup...
-    result = urlfetch.fetch(compute_loc, method=urlfetch.DELETE, headers=headers, deadline=60)
+    h = _create_headers(Accept=__MIME_TEXTOCCI)
+    if auth:
+        h['Authorization'] = auth
+    result = urlfetch.fetch(
+        loc_compute,
+        method=urlfetch.DELETE,
+        headers=h,
+        deadline=__URLFETCH_DEADLINE
+    )
     if not result.status_code == 200:
-        messages.append('Resource deletion of <' + compute_loc + '> failed: response was "' + repr(result))
+        passed = _create_details(
+            test,
+            'Resource deletion of <%(loc)s> failed.' % {'loc': loc_compute},
+            _prettyprint(result)
+        )
     # no need to delete link since that should be in the lifecycle of the compute resource...
-    result = urlfetch.fetch(network_loc, method=urlfetch.DELETE, headers=headers, deadline=60)
+    h = _create_headers(Accept=__MIME_TEXTOCCI)
+    if auth:
+        h['Authorization'] = auth
+    result = urlfetch.fetch(
+        loc_network,
+        method=urlfetch.DELETE,
+        headers=h,
+        deadline=__URLFETCH_DEADLINE
+    )
     if not result.status_code == 200:
-        messages.append('Resource deletion of <' + network_loc + '> failed: response was "' + repr(result))
+        passed = _create_details(
+            test,
+            'Resource deletion of <%(loc)s> failed.' % {'loc': loc_network},
+            _prettyprint(result)
+        )
 
-    if messages:
-        raise ComplianceError(messages)
+    return passed
 
 
-def ctf_35(url):
+def ctf_35(test, url, auth=None):
     """
-Tests the syntax and semantics of the rendering as described in section 3.5 of
+Syntax and semantics of the rendering as described in section 3.5 of
 the Open Cloud Computing Interface - RESTful HTTP Rendering specification.
     """
-    messages = []
+    passed = True
 
     # TODO: add checks for syntax of links, locations, attributes...
 
     regex = r'\w+; \bscheme=[a-z:./#"]*; \bclass="(?:action|kind|mixin)"'
 
-    heads = {
-        'Accept': 'text/plain',
-        'Cache-control': 'max-age=0',
-    }
-    discovery_url = url + '/-/'
-    
-    result = urlfetch.fetch(discovery_url, headers=heads, deadline=60)
+    h = _create_headers(Accept=__MIME_TEXTPLAIN)
+    if auth:
+        h['Authorization'] = auth
+    result = urlfetch.fetch(
+        url + __QI_OCCI,
+        headers=h,
+        deadline=__URLFETCH_DEADLINE
+    )
     cat_rend = result.content.split('\n')[1].strip()
 
     cat_rend = cat_rend[10:]
@@ -434,36 +820,61 @@ the Open Cloud Computing Interface - RESTful HTTP Rendering specification.
 
     m = p.match(cat_rend)
     if m is None:
-        messages.append('Syntax error in "text/plain" rendering (should adhere to <term>;scheme="<url>";class=[kind,action,mixin]): response was "' + repr(result) + '"')
+        passed = _create_details(
+            test,
+            'Syntax error in "text/plain" rendering (should adhere to <term>;scheme="<url>";class=[kind,action,mixin]).',
+            _prettyprint(result)
+        )
 
-    heads['Accept'] = 'text/occi'
-    logging.debug(heads)
-    result = urlfetch.fetch(discovery_url, headers=heads, deadline=60)
+    h = _create_headers(Accept=__MIME_TEXTOCCI)
+    if auth:
+        h['Authorization'] = auth
+    result = urlfetch.fetch(
+        url + __QI_OCCI,
+        headers=h,
+        deadline=__URLFETCH_DEADLINE
+    )
     cat_rend = result.headers['category'].strip()
     p = re.compile(regex)
     m = p.match(cat_rend)
     if m is None:
-        messages.append('Syntax error in "text/occi" rendering (should adhere to <term>;scheme="<url>";class=[kind,action,mixin]): response was "' + repr(result) + '"')
+        passed = _create_details(
+            test,
+            'Syntax error in "text/occi" rendering (should adhere to <term>;scheme="<url>";class=[kind,action,mixin]).',
+            _prettyprint(result)
+        )
 
     # Test escaping of quotes
-    post_heads = {
-        'Content-Type': 'text/occi',
-        'Category': 'compute;scheme="http://schemas.ogf.org/occi/infrastructure#"',
-        'X-OCCI-Attribute': 'occi.compute.memory=3.6, occi.core.title="How\'s your quotes escaping? \\", occi.compute.memory=1.0"'
-    }
-    result = urlfetch.fetch(url, method=urlfetch.POST, headers=post_heads, deadline=60)
+    h = _create_headers(Accept=__MIME_TEXTOCCI, Category=__OCCI_CAT_COMPUTE)
+    if auth:
+        h['Authorization'] = auth
+    h['X-OCCI-Attribute'] = 'occi.compute.memory=3.6, occi.core.title="Quote escaping m\'kay? \\", occi.compute.memory=1.0"'
+    result = urlfetch.fetch(url, method=urlfetch.POST, headers=h, deadline=__URLFETCH_DEADLINE)
     if not result.headers.get('location') or result.status_code not in (200, 201):
-        messages.append('Creation of "compute" resource with "X-OCCI-Attribute: {attr}" failed: response was "{resp}"' %
-                {'attr': post_heads['X-OCCI-Attribute'], 'resp': repr(result)})
-        raise ComplianceError(messages)
-    compute_loc = result.headers.get('location')
+        passed = _create_details(
+            test,
+            'Creation of "compute" resource with "X-OCCI-Attribute: %(attr)s" failed.' %
+                {'attr': h['X-OCCI-Attribute']},
+            _prettyprint(result)
+        )
 
-    result = urlfetch.fetch(compute_loc, headers={'Accept': 'text/plain', 'Cache-control': 'max-age=0',}, deadline=60)
+    loc_compute = result.headers.get('location')
+    h = _create_headers(Accept=__MIME_TEXTPLAIN)
+    if auth:
+        h['Authorization'] = auth
+    result = urlfetch.fetch(
+        loc_compute,
+        headers=h,
+        deadline=__URLFETCH_DEADLINE
+    )
     if not result.status_code == 200:
-        messages.append('Resource retrieval of <' + compute_loc + '> failed: response was "' + repr(result) + '"')
-    # If memory=1.0 quote parsing failed, should be 3.6
-    found = False
+        passed = _create_details(
+            test,
+            'Resource retrieval of <%(loc)s> failed.' % {'loc': loc_compute},
+            _prettyprint(result)
+        )
 
+    found = False # If memory=1.0 quote parsing failed, should be 3.6
     for line in result.content.split('\n'):
         l = line.split(':', 1)
         if len(l) < 2: continue
@@ -483,135 +894,133 @@ the Open Cloud Computing Interface - RESTful HTTP Rendering specification.
                 if memory == 3.6:
                     found = True
     if not found:
-        messages.append('Quotation escaping is not parsed correctly: response was "' + repr(result) + '"')
+        passed = _create_details(test, 'Quotation escaping is not parsed correctly.' , _prettyprint(result))
 
-    if messages:
-        raise ComplianceError(messages)
+    return passed
 
 
-def ctf_365(url):
+def ctf_365(test, url, auth=None):
     """
-Tests the versioning as described in section 3.6.5 of the Open Cloud Computing
+Versioning as described in section 3.6.5 of the Open Cloud Computing
 Interface - RESTful HTTP Rendering specification.
     """
-    messages = []
-    
+    passed = True
 
-    headers = {
-        'Accept': 'text/occi',
-        'Cache-control': 'max-age=0',
-       }
-
-    result = urlfetch.fetch(url + '/', headers=headers, deadline=60)
+    h = _create_headers(Accept=__MIME_TEXTOCCI)
+    if auth:
+        h['Authorization'] = auth
+    result = urlfetch.fetch(url + '/', headers=h, deadline=__URLFETCH_DEADLINE)
     if result.headers.get('server').find('OCCI/1.1') == -1:
-        messages.append('Server does not correctly expose version OCCI/1.1: response was "' + result.headers.get('server') + '"')
+        passed = _create_details(test, 'Server does not correctly expose version OCCI/1.1.', result.headers )
 
-    if messages:
-        raise ComplianceError(messages)
+    return passed
 
 
-def ctf_366(url):
+def ctf_366(test, url, auth=None):
     """
-Tests the correct handling of "Content-type" and "Accept" headers as described
+Correct handling of "Content-type" and "Accept" headers as described
 in section 3.6.6 of the Open Cloud Computing Interface - RESTful HTTP Rendering
 specification.
     """
-    msg_list = []
-    heads = {'Accept': 'text/plain', 'Cache-control': 'max-age=0'}
-    url += '/-/'
-    
+    passed = True
 
-    result = urlfetch.fetch(url, headers=heads, deadline=60)
+    url += __QI_OCCI
+
+    h = _create_headers(Accept=__MIME_TEXTPLAIN)
+    if auth:
+        h['Authorization'] = auth
+    result = urlfetch.fetch(url, headers=h, deadline=__URLFETCH_DEADLINE)
     content_type = result.headers.get('content-type')
     if content_type: content_type = content_type.split(';')[0].strip()
-    if not content_type == 'text/plain':
-        msg_list.append('On "Accept: text/plain", "Content-type: text/plain" was not exposed by the server: response was "' + repr(result) + '"')
+    if not content_type == __MIME_TEXTPLAIN:
+        _create_details(
+            test,
+            'On "Accept: text/plain", "Content-type: text/plain" was not exposed by the server.',
+            _prettyprint(result)
+        )
 
-    heads = {'Accept': 'text/occi'}
-    result = urlfetch.fetch(url, headers=heads, deadline=60)
+    h = _create_headers(Accept=__MIME_TEXTOCCI)
+    if auth:
+        h['Authorization'] = auth
+    result = urlfetch.fetch(url, headers=h, deadline=__URLFETCH_DEADLINE)
     content_type = result.headers.get('content-type')
     if content_type: content_type = content_type.split(';')[0].strip()
-    if not content_type == 'text/occi':
-        msg_list.append('On "Accept: text/occi", "Content-type: text/occi" was not exposed by the server: response was "' + repr(result) + '"')
+    if not content_type == __MIME_TEXTOCCI:
+        _create_details(
+            test,
+            'On "Accept: text/occi", "Content-type: text/occi" was not exposed by the server.',
+            _prettyprint(result)
+        )
 
-    if msg_list:
-        raise ComplianceError(msg_list)
-    return 'OK'
+    return passed
 
 
-def ctf_367(url):
+def ctf_367(test, url, auth=None):
     """
-Tests RFC5785 compliance as described in section 3.6.7 of the Open Cloud
+RFC5785 compliance as described in section 3.6.7 of the Open Cloud
 Computing Interface - RESTful HTTP Rendering specification.
     """
-    messages = []
-    headers = {
-        'Accept': 'text/occi',
-        'Cache-control': 'max-age=0',
-    }
+    passed = True
+
+    h = _create_headers(Accept=__MIME_TEXTOCCI)
+    if auth:
+        h['Authorization'] = auth
 
     # retrieval of all kinds, actions and mixins
-    
-    result_first = urlfetch.fetch(url + '/.well-known/org/ogf/occi/-/', headers=headers, deadline=60)
+    result_first = urlfetch.fetch(url + __QI_OCCI, headers=h, deadline=__URLFETCH_DEADLINE)
     if not result_first.status_code in [200]:
-        messages.append(
-            'GET on query interface failed ('
-            + str(result_first.status_code) + '): ' + result_first.content
-        )
+        passed = _create_details(test, 'GET on query interface failed.', _prettyprint(result_first))
 
     # retrieval of all kinds, actions and mixins
-    result_second = urlfetch.fetch(url + '/-/', headers=headers, deadline=60)
+    result_second = urlfetch.fetch(url + __QI_RFC, headers=h, deadline=__URLFETCH_DEADLINE)
     if not result_second.status_code in [200]:
-        messages.append(
-            'GET on query interface failed ('
-            + str(result_second.status_code) + '): ' + result_second.content
-        )
+        passed = _create_details('GET on query interface failed.', _prettyprint(result_second))
 
 
     if result_first.headers['category'] != result_second.headers['category']:
-        messages.append('Differing GET results for <' + url + '/-/> and <' + url + '/.well-known/org/ogf/occi/-/>')
+        passed = _create_details(
+            test,
+            'Differing GET results for <%(qi_occi)s> and <%(qi_rfc)s>'
+                % {'qi_occi': url + __QI_OCCI, 'qi_rfc': url + __QI_RFC}
+        )
 
-    if messages:
-        raise ComplianceError(messages)
-    return 'OK'
+    return passed
 
 
 def _test_model_completeness(rendering, rel, attributes, actions):
     """
-Tests whether a given instace is complete wrt. to the category it
-represents.
+Completeness of the model, i.e. instance attributes and actions
+wrt. to the category they represent.
     """
     for item in rendering:
         item = item.strip().split('=')
         if item[0] == 'rel':
             if item[1].find(rel) == -1:
-                raise ComplianceError('Corresponding "rel" is missing: should be "' + rel + '", but found "' + item[1] + '"')
+                return False
         elif item[0] == 'attributes':
             for attr in attributes:
                 if item[1].find(attr) == -1:
-                    raise ComplianceError('Mandatory attribute "' + attr + '" was missing on ' + rendering[0].strip() + '. Instead, "' + item[1] + '" was found')
+                    return False
         elif item[0] == 'actions':
             for action in actions:
                 if item[1].find(action) == -1:
-                    raise ComplianceError('Mandatory action "' + action + '" was missing on ' + rendering[0].strip() + '. Instead, ' + item[1] + '" was found')
+                    return False
 
+    return True
 
-def ctf_gfd184(url):
+def ctf_gfd184(test, url, auth=None):
     """
-Tests whether the IaaS model is complete with respoect to the Open Cloud
+Completeness of the IaaS model with respect to the Open Cloud
 Computing Interface - Infrastructure specification.
     """
-    messages = []
+    passed = True
 
-    headers = {
-        'Accept': 'text/plain',
-        'Cache-control': 'max-age=0',
-    }
-    url += '/-/'
-    
-    result = urlfetch.fetch(url, headers=headers, deadline=60)
+    h = _create_headers(Accept=__MIME_TEXTPLAIN)
+    if auth:
+        h['Authorization'] = auth
+    result = urlfetch.fetch(url + __QI_OCCI, headers=h, deadline=__URLFETCH_DEADLINE
+    )
 
-    infra_model = []
     for line in result.content.split('\n'):
         cur = line.lstrip('Category:').split(';')
         # check if compute has all attributes & actions & rels
@@ -620,148 +1029,111 @@ Computing Interface - Infrastructure specification.
             rel = 'http://schemas.ogf.org/occi/core#resource'
             attr = ['occi.compute.architecture', 'occi.compute.cores', 'occi.compute.hostname', 'occi.compute.speed', 'occi.compute.memory', 'occi.compute.state']
             actions = ['start', 'stop', 'suspend', 'restart']
-            _test_model_completeness(cur, rel, attr, actions)
-            infra_model.append('compute')
+            if not _test_model_completeness(cur, rel, attr, actions):
+                passed = _create_details(test, 'Infrastructure model is missing "compute" kind.')
         elif cur[0].strip() == 'network' and cur[1].strip() == 'scheme="http://schemas.ogf.org/occi/infrastructure#"':
             rel = 'http://schemas.ogf.org/occi/core#resource'
             attr = ['occi.network.vlan', 'occi.network.label', 'occi.network.state']
             actions = ['up', 'down']
-            _test_model_completeness(cur, rel, attr, actions)
-            infra_model.append('network')
+            if not _test_model_completeness(cur, rel, attr, actions):
+                passed = _create_details(test, 'Infrastructure model is missing "network" kind.')
         elif cur[0].strip() == 'storage' and cur[1].strip() == 'scheme="http://schemas.ogf.org/occi/infrastructure#"':
             rel = 'http://schemas.ogf.org/occi/core#resource'
             attr = ['occi.storage.size', 'occi.storage.state']
             actions = ['online', 'offline', 'backup', 'snapshot', 'resize']
-            _test_model_completeness(cur, rel, attr, actions)
-            infra_model.append('storage')
+            if not _test_model_completeness(cur, rel, attr, actions):
+                passed = _create_details(test, 'Infrastructure model is missing "storage" kind.')
         #----------------------------------------------------------------- Links
         elif cur[0].strip() == 'storagelink' and cur[1].strip() == 'scheme="http://schemas.ogf.org/occi/infrastructure#"':
             rel = 'http://schemas.ogf.org/occi/core#link'
             attr = ['occi.storagelink.deviceid', 'occi.storagelink.mountpoint', 'occi.storagelink.state']
             actions = []
-            _test_model_completeness(cur, rel, attr, actions)
-            infra_model.append('storagelink')
+            if not _test_model_completeness(cur, rel, attr, actions):
+                passed = _create_details(test, 'Infrastructure model is missing "storagelink" link.')
         elif cur[0].strip() == 'networkinterface' and cur[1].strip() == 'scheme="http://schemas.ogf.org/occi/infrastructure#"':
             rel = 'http://schemas.ogf.org/occi/core#link'
             attr = ['occi.networkinterface.state', 'occi.networkinterface.mac', 'occi.networkinterface.interface']
             actions = []
-            _test_model_completeness(cur, rel, attr, actions)
-            infra_model.append('networkinterface')
+            if not _test_model_completeness(cur, rel, attr, actions):
+                passed = _create_details(test, 'Infrastructure model is missing "networkinterface" link.')
         #---------------------------------------------------------------- mixins
         elif cur[0].strip() == 'ipnetwork' and cur[1].strip() == 'scheme="http://schemas.ogf.org/occi/infrastructure/network#"':
             rel = 'http://schemas.ogf.org/occi/core#link'
             attr = ['occi.network.address', 'occi.network.gateway', 'occi.network.allocation']
             actions = []
-            _test_model_completeness(cur, rel, attr, actions)
-            infra_model.append('ipnetwork')
+            if not _test_model_completeness(cur, rel, attr, actions):
+                passed = _create_details(test, 'Infrastructure model is missing "ipnetwork" mixin.')
         #--------------------------------------------------------------- actions
         elif cur[0].strip() == 'start' and cur[1].strip() == 'scheme="http://schemas.ogf.org/occi/infrastructure/compute/action#"':
             rel = ''
             attr = []
             actions = []
-            _test_model_completeness(cur, rel, attr, actions)
-            infra_model.append('start')
+            if not _test_model_completeness(cur, rel, attr, actions):
+                passed = _create_details(test, 'Infrastructure model is missing "start" action definition.')
         elif cur[0].strip() == 'stop' and cur[1].strip() == 'scheme="http://schemas.ogf.org/occi/infrastructure/compute/action#"':
             rel = ''
             #attr = ['graceful', 'acpioff', 'poweroff']
             attr = ['method']
             actions = []
-            _test_model_completeness(cur, rel, attr, actions)
-            infra_model.append('stop')
+            if not _test_model_completeness(cur, rel, attr, actions):
+                passed = _create_details(test, 'Infrastructure model is missing "stop" action definition.')
         elif cur[0].strip() == 'restart' and cur[1].strip() == 'scheme="http://schemas.ogf.org/occi/infrastructure/compute/action#"':
             rel = ''
             #attr = ['graceful', 'warm', 'cold']
             attr = ['method']
             actions = []
-            _test_model_completeness(cur, rel, attr, actions)
-            infra_model.append('restart')
+            if not _test_model_completeness(cur, rel, attr, actions):
+                passed = _create_details(test, 'Infrastructure model is missing "restart" action definition.')
         elif cur[0].strip() == 'suspend' and cur[1].strip() == 'scheme="http://schemas.ogf.org/occi/infrastructure/compute/action#"':
             rel = ''
             #attr = ['hibernate', 'suspend']
             attr = ['method']
             actions = []
-            _test_model_completeness(cur, rel, attr, actions)
-            infra_model.append('suspend')
+            if not _test_model_completeness(cur, rel, attr, actions):
+                passed = _create_details(test, 'Infrastructure model is missing "suspend" action definition.')
         elif cur[0].strip() == 'up' and cur[1].strip() == 'scheme="http://schemas.ogf.org/occi/infrastructure/network/action#"':
             rel = ''
             attr = []
             actions = []
-            _test_model_completeness(cur, rel, attr, actions)
-            infra_model.append('up')
+            if not _test_model_completeness(cur, rel, attr, actions):
+                passed = _create_details(test, 'Infrastructure model is missing "up" action definition.')
         elif cur[0].strip() == 'down' and cur[1].strip() == 'scheme="http://schemas.ogf.org/occi/infrastructure/network/action#"':
             rel = ''
             attr = []
             actions = []
-            _test_model_completeness(cur, rel, attr, actions)
-            infra_model.append('down')
+            if not _test_model_completeness(cur, rel, attr, actions):
+                passed = _create_details(test, 'Infrastructure model is missing "down" action definition.')
         elif cur[0].strip() == 'online' and cur[1].strip() == 'scheme="http://schemas.ogf.org/occi/infrastructure/storage/action#"':
             rel = ''
             attr = []
             actions = []
-            _test_model_completeness(cur, rel, attr, actions)
-            infra_model.append('online')
+            if not _test_model_completeness(cur, rel, attr, actions):
+                passed = _create_details(test, 'Infrastructure model is missing "online" action definition.')
         elif cur[0].strip() == 'offline' and cur[1].strip() == 'scheme="http://schemas.ogf.org/occi/infrastructure/storage/action#"':
             rel = ''
             attr = []
             actions = []
-            _test_model_completeness(cur, rel, attr, actions)
-            infra_model.append('offline')
+            if not _test_model_completeness(cur, rel, attr, actions):
+                passed = _create_details(test, 'Infrastructure model is missing "offline" action definition.')
         elif cur[0].strip() == 'resize' and cur[1].strip() == 'scheme="http://schemas.ogf.org/occi/infrastructure/storage/action#"':
             rel = ''
             attr = ['size']
             actions = []
-            _test_model_completeness(cur, rel, attr, actions)
-            infra_model.append('resize')
+            if not _test_model_completeness(cur, rel, attr, actions):
+                passed = _create_details(test, 'Infrastructure model is missing "resize" action definition.')
         elif cur[0].strip() == 'backup' and cur[1].strip() == 'scheme="http://schemas.ogf.org/occi/infrastructure/storage/action#"':
             rel = ''
             attr = []
             actions = []
-            _test_model_completeness(cur, rel, attr, actions)
-            infra_model.append('backup')
+            if not _test_model_completeness(cur, rel, attr, actions):
+                passed = _create_details(test, 'Infrastructure model is missing "backup" action definition.')
         elif cur[0].strip() == 'snapshot' and cur[1].strip() == 'scheme="http://schemas.ogf.org/occi/infrastructure/storage/action#"':
             rel = ''
             attr = []
             actions = []
-            _test_model_completeness(cur, rel, attr, actions)
-            infra_model.append('snapshot')
+            if not _test_model_completeness(cur, rel, attr, actions):
+                passed = _create_details(test, 'Infrastructure model is missing "snapshot" action definition.')
 
-    if not 'compute' in infra_model:
-        messages.append('Infrastructure model is missing "compute" kind.')
-    if not 'network' in infra_model:
-        messages.append('Infrastructure model is missing "network" kind.')
-    if not 'storage' in infra_model:
-        messages.append('Infrastructure model is missing "storage" kind.')
-    if not 'storagelink' in infra_model:
-        messages.append('Infrastructure model is missing "storagelink" link.')
-    if not 'networkinterface' in infra_model:
-        messages.append('Infrastructure model is missing "networkinterface" link.')
-    if not 'ipnetwork' in infra_model:
-        messages.append('Infrastructure model is missing "ipnetwork" mixin.')
-    if not 'start' in infra_model:
-        messages.append('Infrastructure model is missing "start" action definition.')
-    if not 'stop' in infra_model:
-        messages.append('Infrastructure model is missing "stop" action definition.')
-    if not 'restart' in infra_model:
-        messages.append('Infrastructure model is missing "restart" action definition.')
-    if not 'suspend' in infra_model:
-        messages.append('Infrastructure model is missing "suspend" action definition.')
-    if not 'up' in infra_model:
-        messages.append('Infrastructure model is missing "up" action definition.')
-    if not 'down' in infra_model:
-        messages.append('Infrastructure model is missing "down" action definition.')
-    if not 'snapshot' in infra_model:
-        messages.append('Infrastructure model is missing "snapshot" action definition.')
-    if not 'resize' in infra_model:
-        messages.append('Infrastructure model is missing "resize" action definition.')
-    if not 'online' in infra_model:
-        messages.append('Infrastructure model is missing "online" action definition.')
-    if not 'offline' in infra_model:
-        messages.append('Infrastructure model is missing "offline" action definition.')
-    if not 'backup' in infra_model:
-        messages.append('Infrastructure model is missing "backup" action definition.')
-
-    if messages:
-        raise ComplianceError(messages)
-
+    return passed
 
  # eof

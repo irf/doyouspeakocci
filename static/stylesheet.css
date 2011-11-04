@@ -14,98 +14,96 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+ * along with doyouspeakOCCI.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 a:link { color: #666666; text-decoration: underline; }
 a:visited { font-weight: normal; color: #CCCCCC; text-decoration: none; }
 
+body {
+    margin: 0 auto;
+    width: 800px;
+}
+
 code {
-    font-family: "Ubuntu Mono", "Courier New", monospace;
-    border: 1px;
-    border-color: #666666;
-    border-radius: 3px;
     background-color: #CCCCCC;
+    border: 1px #666666;
+    border-radius: 3px;
+    font-family: "Ubuntu Mono", "Courier New", monospace;
     padding: 3px;
 }
 
-body {
-    width: 800px;
-    margin: 0px auto;
-}
-
-ul#navigation {
-    top: 2em;
+footer {
+    bottom: 2em;
     padding: 1em;
     font-family: Mako, Helvetica, sans-serif;
     text-align: center;
+    border-top: 1px solid #CCCCCC;
 }
 
-ul#navigation li {
-    display: inline;
-    margin:  0.5em;
-}
-
-#logotextarea {
+header#text {
     float: left;
     width: 500px;
-    margin-left: 10px;
+    margin-top: 10px;
     margin-bottom: 50px;
+    margin-left: 10px;
     text-align: justify;
     font-family: Forum, Palatino, serif;
     font-size: 32pt;
 }
 
-.doyouspeaklight {
-    color: #CCCCCC;
-}
-
-.doyouspeakdark {
-    color: #999999;
-}
-
-.occi {
-    color: #000000;
-}
-
-#logopicturearea {
+header#picture {
     float: right;
     width: 250px;
+    margin-top: 10px;
+    margin-bottom: 50px;
+    margin-right: 10px;
 }
 
-#slogan {
+fieldset#service_details * {
+    font-size: 18px;
+}
+
+input#service_url {
+    width: 300px;
+}
+
+nav {
+    top: 2em;
+    padding: 1em;
+    font-family: Mako, Helvetica, sans-serif;
+    text-align: center;
+    border-bottom: 1px solid #CCCCCC;
+}
+
+nav ul li {
+    display: inline;
+    margin:  0.5em;
+}
+
+section {
+    clear: both;
+    font-family: Mako, Helvetica, sans-serif;
+    text-align: justify;
+}
+
+section#query {
+    top: 2em;
+    padding: 1em;
+    text-align: center;
+}
+
+section#query fieldset {
+    border-style: none;
+}
+
+section#slogan {
     margin: 0.5em;
     padding: 0.5em;
     font-family: "Special Elite", cursive;
     font-size: large;
     text-align: center;
     line-height: 1.25em;
-}
-
-#mainarea {
-    clear: both;
-    font-family: Mako, Helvetica, sans-serif;
-    text-align: justify;
-}
-
-#submitTest {
-    top: 2em;
-    padding: 1em;
-    font-family: Mako, Helvetica, sans-serif;
-    text-align: center;
-}
-
-#submitTest form div#service_details {
-    font-size: 18px;
-}
-
-#submitTest form div#service_details input#service_url {
-    width: 300px;
-    font-size: inherit;
-}
-
-#submitTest form div#service_details input#submit {
-    font-size: inherit;
 }
 
 tbody tr td.test_id {
@@ -120,16 +118,16 @@ td {
     padding: 10px;
 }
 
-.test_id {
-    text-align: center;
+.doyouspeaklight {
+    color: #CCCCCC;
 }
 
-.test_description{
-    text-align: justify;
+.doyouspeakdark {
+    color: #999999;
 }
 
-.test_result {
-    text-align: center;
+.occi {
+    color: #000000;
 }
 
 .occi_compliant {
@@ -141,21 +139,25 @@ td {
     color: maroon;
 }
 
-.occi_test_success {
+.occi_test_pass {
     font-variant: small-caps;
     color: green;
 }
-.occi_test_failure {
+.occi_test_fail {
     font-variant: small-caps;
     color: maroon;
 }
 
-#footer {
-    top: 2em;
-    padding: 1em;
-    font-family: Mako, Helvetica, sans-serif;
+.test_description{
+    text-align: justify;
+}
+
+.test_id {
     text-align: center;
-    background-color: #CCCCCC;
+}
+
+.test_result {
+    text-align: center;
 }
 
 /* eof */

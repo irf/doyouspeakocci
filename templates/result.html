@@ -17,7 +17,7 @@
   -- GNU General Public License for more details.
   --
   -- You should have received a copy of the GNU General Public License
-  -- along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+  -- along with doyouspeakOCCI.  If not, see <http://www.gnu.org/licenses/>.
   -->
 
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -100,11 +100,11 @@
                 {% if test.result %}
                 <td class="test_id">{{ test.name }}</td>
                 <td class="test_description">{{ test.description }}</td>
-                <td class="test_result"><span class="occi_test_success">SUCCEEDED</span></td>
+                <td class="test_result"><span class="occi_test_pass">SUCCEEDED</span></td>
                 {% else %}
                 <td class="test_id">{{ test.name }}</td>
                 <td class="test_description">{{ test.description }}</td>
-                <td class="test_result"><span class="occi_test_failure">FAILED</span></td>
+                <td class="test_result"><span class="occi_test_fail">FAILED</span></td>
                 {% endif %}
             </tr>
             {% if not test.result %}

@@ -13,7 +13,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+# along with doyouspeakOCCI.  If not, see <http://www.gnu.org/licenses/>.
 
 application: doyouspeakocci
 version: 2
@@ -25,6 +25,10 @@ handlers:
   static_files: static/images/favicon.ico
   upload: static/images/favicon\.ico
 
+- url: /about
+  static_files: static/about.html
+  upload: static/about\.html
+
 - url: /static
   static_dir: static
 
@@ -33,5 +37,8 @@ handlers:
 
 builtins:
 - datastore_admin: on
+
+inbound_services:
+- channel_presence
 
 # eof

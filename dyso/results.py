@@ -15,7 +15,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+# along with doyouspeakOCCI.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 
@@ -49,7 +49,9 @@ class ResultPage(webapp.RequestHandler):
                 desc = func.__doc__.strip()
 
                 # run the individual test
-                test = Test(func.__name__, desc)
+                test = Test(suite)
+                test.name = func.__name__
+                test.description = desc
                 try:
                     func(suite.service_uri)
                     test.result = True

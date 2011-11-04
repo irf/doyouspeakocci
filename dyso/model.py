@@ -15,25 +15,10 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+# along with doyouspeakOCCI.  If not, see <http://www.gnu.org/licenses/>.
+import uuid
 
 from google.appengine.ext import db
-
-class Test(db.Model):
-    """
-    Stores statistical data on each compliance test run.
-    TODO: not yet documented.
-    """
-    name = db.StringProperty()
-    description = db.TextProperty()
-    result = db.BooleanProperty()
-    details = db.TextProperty()
-
-    def __init__(self, name, description):
-        super(Test, self).__init__()
-        self.name = name
-        self.description = description
-
 
 class Suite(db.Model):
     """
@@ -44,10 +29,54 @@ class Suite(db.Model):
     service_uri = db.LinkProperty()
     is_compliant = db.BooleanProperty()
 
-class Subscriber(db.Model):
+    def to_dict(self, with_tests=False):
+        result = {
+            'uuid': self.key().name(),
+            'date': self.date.isoformat(),
+            'service_uri': self.service_uri,
+            'is_compliant': self.is_compliant
+        }
+        if with_tests:
+            tests = []
+            for test in self.tests:
+                tests.append({'name': test.name, 'description': test.description, 'result': test.result})
+            result['tests'] = tests
+        return result
+
+
+class Test(db.Model):
     """
+    Stores statistical data on each compliance test run.
     TODO: not yet documented.
     """
-    subscriber_uri = db.LinkProperty()
+    suite = db.ReferenceProperty(Suite, collection_name='tests')
+
+    name = db.StringProperty()
+    description = db.TextProperty()
+    result = db.BooleanProperty()
+
+    def to_dict(self, with_details=True):
+        result = {
+            'name': self.name,
+            'description': self.description,
+            'result': self.result,
+        }
+        if with_details:
+            details = []
+            for detail in self.details:
+                details.append({'message': detail.message, 'response': detail.response})
+            result['details'] = details
+        return result
+
+
+class Detail(db.Model):
+    """
+
+    """
+    test = db.ReferenceProperty(Test, collection_name='details')
+
+    message = db.TextProperty()
+    response = db.TextProperty()
+
 
 # eof
