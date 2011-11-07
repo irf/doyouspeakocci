@@ -38,7 +38,4 @@ handlers:
 builtins:
 - datastore_admin: on
 
-inbound_services:
-- channel_presence
-
 # eof
