@@ -17,14 +17,8 @@
 
 application: doyouspeakocci
 version: 2
-
-runtime: python27
+runtime: python
 api_version: 1
-# threadsafe: false
-
-libraries:
-- name: django
-  version: "1.2"
 
 handlers:
 - url: /favicon\.ico
@@ -39,7 +33,7 @@ handlers:
   static_dir: static
 
 - url: /.*
-  script: dyso.app
+  script: dyso/app.py
 
 builtins:
 - datastore_admin: on
