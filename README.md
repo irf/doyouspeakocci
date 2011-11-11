@@ -18,7 +18,7 @@ Note that doyouspeakOCCI not to be considered the "official" testing suite
 for OCCI endorsed by the Open Grid Forum, but rather than that, a third-party
 contribution which aims to be as close as possible. For a more thorough
 explanation, please take a look at [the wiki pages]
-(https://github.com/irf/doyouspeakOCCI/wiki/is-dyso-normative).
+(https://github.com/irf/doyouspeakOCCI/wiki/faq).
 
 
 ## How to use
