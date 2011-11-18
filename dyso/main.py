@@ -16,11 +16,11 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with doyouspeakOCCI.  If not, see <http://www.gnu.org/licenses/>.
-import base64
-from google.appengine.api.datastore import Key
+
 from google.appengine.dist import use_library
 use_library('django', '1.2')
 
+import base64
 import logging
 import os
 import uuid
@@ -28,6 +28,7 @@ import uuid
 from dyso import tests
 from dyso.model import Suite, Test
 
+from datetime import datetime
 from django.utils import simplejson
 
 from google.appengine.api.channel import channel
@@ -46,22 +47,26 @@ class MainPage(webapp.RequestHandler):
         client = uuid.uuid4().__str__()
         token = channel.create_channel(client)
 
-        running_since = Suite.all().order('date').get().date
+        if Suite.all().count() > 0:
+            running_since = Suite.all().order('date').get().date
+        else:
+            running_since = datetime.now()
+
         number_of_runs = Suite.all().count()
 
-        tests = {}
+        ctfs = {}
         # run the test suite
         for elem in dir(tests):
             if elem.find('ctf_') != -1:
                 func = getattr(tests, elem)
-                tests[func.__name__] = func.__doc__.strip()
+                ctfs[func.__name__] = func.__doc__.strip()
 
         template_values = {
             'client': client,
             'token': token,
             'number_of_runs': number_of_runs,
             'running_since': running_since,
-            'tests': tests,
+            'tests': ctfs,
             }
 
         path = os.path.join(os.path.dirname(__file__), '../templates/index.html')

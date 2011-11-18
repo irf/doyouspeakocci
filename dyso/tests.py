@@ -67,7 +67,7 @@ __OCCI_LOC_COMPUTE = '/compute/'
 
 
 def _prettyprint(output):
-    result = 'Status Code: ' + output.status_code + '\n'
+    result = 'Status Code: %(c)i\n' % { 'c': output.status_code }
 
     result += 'Header:\n'
     for k, v in output.headers.iteritems():

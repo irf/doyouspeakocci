@@ -21,7 +21,6 @@ import os
 
 from dyso import tests
 from dyso.model import Suite, Test
-from dyso.tests import ComplianceError
 
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
