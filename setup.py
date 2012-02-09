@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 # $Id$
 
+# Copyright (c) 2011, 2012 Technische Universität Dortmund
+#
 # This file is part of doyouspeakOCCI.
 #
 # doyouspeakOCCI is free software: you can redistribute it and/or modify

@@ -1,5 +1,7 @@
 # $Id$
 
+# Copyright (c) 2011, 2012 Technische Universität Dortmund
+#
 # This file is part of doyouspeakOCCI.
 #
 # doyouspeakOCCI is free software: you can redistribute it and/or modify
@@ -16,14 +18,9 @@
 # along with doyouspeakOCCI.  If not, see <http://www.gnu.org/licenses/>.
 
 application: doyouspeakocci
-version: 3
-runtime: python27
+version: 4
+runtime: python
 api_version: 1
-threadsafe: false
-
-libraries:
-- name: django
-  version: "1.2"
 
 handlers:
 - url: /favicon\.ico
@@ -38,12 +35,6 @@ handlers:
   static_dir: static
 
 - url: /.*
-  script: dyso.dyso.app
-
-#inbound_services:
-#- channel_presence
-
-#builtins:
-#- datastore_admin: on
+  script: dyso/dyso.py
 
 # eof

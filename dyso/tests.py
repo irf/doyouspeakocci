@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 # $Id$
 
+# Copyright (c) 2011, 2012 Technische Universität Dortmund
+#
 # This file is part of doyouspeakOCCI.
 #
 # doyouspeakOCCI is free software: you can redistribute it and/or modify
@@ -17,12 +19,13 @@
 # You should have received a copy of the GNU General Public License
 # along with doyouspeakOCCI.  If not, see <http://www.gnu.org/licenses/>.
 
+import model
+
 import logging
 import re
 import uuid
 
 from google.appengine.api import urlfetch
-# from dyso.model import Detail
 
 
 __URLFETCH_DEADLINE = 10
@@ -79,7 +82,7 @@ def _prettyprint(output):
 
 
 def _create_details(test, message, response='Response not available.'):
-    details = Detail(test=test)
+    details = model.Detail(test=test)
     details.message = message
     details.response = response
     details.put()
@@ -1136,7 +1139,7 @@ Computing Interface - Infrastructure specification.
 
     return passed
 
-elemente = globals().copy()
-available_functions = [elemente[f] for f in elemente if f.startswith("ctf_")]
+functions = globals().copy()
+ctfs = [functions[f] for f in functions if f.startswith("ctf_")]
 
  # eof
