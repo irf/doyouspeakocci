@@ -22,6 +22,7 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
+    <meta charset="UTF-8"/>
     <meta name="description"
           content="A compliance testing application for the Open Cloud Computing Interface family of specifications designed to run on Google App Engine."/>
     <meta name="author" content="Alexander Papaspyrou, Technische Universität Dortmund"/>
@@ -38,222 +39,229 @@
 
 </head>
 <body onload="initialize()">
-    <nav id="navigation">
-        <ul>
-            <li>Welcome</li>
-            <li>|</li>
-            <!--
-            <li><a href="/statistics">Statistics</a></li>
-            <li>|</li>
-            -->
-            <li><a href="/about">About</a></li>
-        </ul>
-    </nav>
+<nav id="navigation">
+    <ul>
+        <li>Welcome</li>
+        <li>|</li>
+        <!--
+        <li><a href="/statistics">Statistics</a></li>
+        <li>|</li>
+        -->
+        <li><a href="/about">About</a></li>
+    </ul>
+</nav>
 
-    <header id="text">
+<header id="text">
         <span class="doyouspeaklight"
               lang="bg">говорители</span><span
-              class="doyouspeakdark"
-              lang="de">sprechensie</span><span
-              class="doyouspeaklight"
-              lang="fr">parle<br/>zvous</span><span
-              class="doyouspeakdark"
-              lang="el">μιλάτε</span><span
-              class="doyouspeaklight"
-              lang="ga">labhraíonntú</span><span
-              class="doyouspeakdark"
-              lang="it">parl<br/>i</span><span
-              class="doyouspeaklight"
-              lang="la">loqueris</span><span
-              class="doyouspeakdark"
-              lang="nl">spreekje</span><span
-              class="doyouspeaklight"
-              lang="sv">talardu</span><span
-              class="doyouspeakdark"
-              lang="es">esuste<br/>dhabla</span><span
-              class="doyouspeaklight"
-              lang="en">doyouspeak</span><span
-              class="occi">OCCI?</span>
-    </header>
-    <header id="picture">
-        <img src="/static/images/logo.png" width="250px"/>
-    </header>
+        class="doyouspeakdark"
+        lang="de">sprechensie</span><span
+        class="doyouspeaklight"
+        lang="fr">parle<br/>zvous</span><span
+        class="doyouspeakdark"
+        lang="el">μιλάτε</span><span
+        class="doyouspeaklight"
+        lang="ga">labhraíonntú</span><span
+        class="doyouspeakdark"
+        lang="it">parl<br/>i</span><span
+        class="doyouspeaklight"
+        lang="la">loqueris</span><span
+        class="doyouspeakdark"
+        lang="nl">spreekje</span><span
+        class="doyouspeaklight"
+        lang="sv">talardu</span><span
+        class="doyouspeakdark"
+        lang="es">esuste<br/>dhabla</span><span
+        class="doyouspeaklight"
+        lang="en">doyouspeak</span><span
+        class="occi">OCCI?</span>
+</header>
+<header id="picture">
+    <img src="/static/images/logo.png" width="250px"/>
+</header>
 
-    <section id="slogan">
-        Proudly serving the community since <date>{{ running_since.date|date:"F j, Y" }}</date>,
-        with {{ number_of_runs }} tests so far.
-    </section>
-    <section id="query">
-        <form id="form" action="/">
-            <fieldset id="service_details">
-                <label for="service_url">Service URL:</label>
-                <input id="service_url" type="url"
-                       name="url" placeholder="http://example.com/occi" required="required" autofocus="autofocus"/>
-                <label for="needs_auth">Requires Authentication</label>
-                <input id="needs_auth" type="checkbox"
-                       name="auth" value="needs_auth"/>
-                <button id="go" disabled="disabled">Go!</button>
-            </fieldset>
-            <fieldset id="auth_details" style="display: none">
-                <label for="username">Username:</label>
-                <input id="username" name="user" placeholder="foo"/>
-                <label for="password">Password:</label>
-                <input id="password" type="password" name="pass" placeholder="bar"/>
-            </fieldset>
-        </form>
-    </section>
-    <section id="result" style="display: none">
-        <p>
-            Your implementation is
-            <span id="istested">being tested. Please wait... <img src="/static/images/busy.gif" alt="Busy"/></span>
-            <span id="iscompliant" style="display: none"><span class="occi_compliant">compliant</span>. Congratulations!</span>
-            <span id="isnotcompliant" style="display: none"><span class="occi_notcompliant">not compliant</span>.</span>
-        </p>
-        <table id="details" style="display: none">
-            <thead>
-                <tr>
-                    <th>Description</th>
-                    <th>Result</th>
-                </tr>
-            </thead>
-            <tfoot>
-                <tr>
-                    <td colspan="2">
-                        <p>
-                            Suite <output id="suite.id"></output>
-                            (<a id="suite.link" href="http://doyouspeakocci.appspot.com/archive/">permalink</a>).
-                        </p>
-                    </td>
-                </tr>
-            </tfoot>
-            <tbody>
-            {% for key, value in tests.items %}
-                <tr id="{{ key }}.result" class="{% cycle 'whiterow', 'lightgreyrow' %}" style="display: none">
-                    <td><dfn id="{{ key }}">{{ value }}</dfn></td>
-                    <td><output for="{{ key }}"></output></td>
-                </tr>
-                <tr id="{{ key }}.details" class="darkgreyrow" style="display: none">
-                    <td colspan="2">
-                    </td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </section>
+<section id="slogan">
+    Proudly serving the community since
+    <date>{{ running_since.date|date:"F j, Y" }}</date>
+    ,
+    with {{ number_of_runs }} tests so far.
+</section>
+<section id="query">
+    <form id="form" action="/">
+        <fieldset id="service_details">
+            <label for="service_url">Service URL:</label>
+            <input id="service_url" type="url"
+                   name="url" placeholder="http://example.com/occi" required="required" autofocus="autofocus"/>
+            <label for="needs_auth">Requires Authentication</label>
+            <input id="needs_auth" type="checkbox"
+                   name="auth" value="needs_auth"/>
+            <button id="go" disabled="disabled">Go!</button>
+        </fieldset>
+        <fieldset id="auth_details" style="display: none">
+            <legend>HTTP Basic Auth Details:</legend>
+            <label for="username">Username:</label>
+            <input id="username" name="user" placeholder="foo"/>
+            <label for="password">Password:</label>
+            <input id="password" type="password" name="pass" placeholder="bar"/>
+        </fieldset>
+    </form>
+</section>
+<section id="result" style="display: none">
+    <p>
+        Your implementation is
+        <span id="istested">being tested. Please wait... <img src="/static/images/busy.gif" alt="Busy"/></span>
+        <span id="iscompliant" style="display: none"><span
+                class="occi_compliant">compliant</span>. Congratulations!</span>
+        <span id="isnotcompliant" style="display: none"><span class="occi_notcompliant">not compliant</span>.</span>
+    </p>
+    <table id="details" style="display: none">
+        <thead>
+        <tr>
+            <th>Description</th>
+            <th>Result</th>
+        </tr>
+        </thead>
+        <tfoot>
+        <tr>
+            <td colspan="2">
+                <p>
+                    Suite
+                    <output id="suite.id"></output>
+                    (<a id="suite.link" href="http://doyouspeakocci.appspot.com/archive/">permalink</a>).
+                </p>
+            </td>
+        </tr>
+        </tfoot>
+        <tbody>
+        {% for key, value in tests.items %}
+            <tr id="{{ key }}.result" class="{% cycle 'whiterow', 'lightgreyrow' %}" style="display: none">
+                <td><dfn id="{{ key }}">{{ value }}</dfn></td>
+                <td>
+                    <output for="{{ key }}"></output>
+                </td>
+            </tr>
+            <tr id="{{ key }}.details" class="darkgreyrow" style="display: none">
+                <td colspan="2">
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</section>
 
-    <footer>&nbsp;</footer>
+<footer>&nbsp;</footer>
 
-    <script type="text/javascript">
+<script type="text/javascript">
 
-        var client_id = '{{ client }}';
+    var client_id = '{{ client }}';
 
-        /* ensure explicit referencing of jQuery calls */
-        jQuery.noConflict();
+    /* ensure explicit referencing of jQuery calls */
+    jQuery.noConflict();
 
-        function initialize() {
-            /* Google App Engine Channel API */
-            var channel = new goog.appengine.Channel('{{ token }}');
-            var socket = channel.open();
+    function initialize() {
+        /* Google App Engine Channel API */
+        var channel = new goog.appengine.Channel('{{ token }}');
+        var socket = channel.open();
 
-            socket.onopen = function() {
-                jQuery(':submit').removeAttr('disabled');
-            };
-            socket.onmessage = onChannelMessage;
-            socket.onerror = function() {
-                // TODO: not yet implemented.
-            };
-            socket.onclose = function() {
-                // TODO: not yet implemented.
-            };
+        socket.onopen = function () {
+            jQuery(':submit').removeAttr('disabled');
+        };
+        socket.onmessage = onChannelMessage;
+        socket.onerror = function () {
+            // TODO: not yet implemented.
+        };
+        socket.onclose = function () {
+            // TODO: not yet implemented.
+        };
 
-            /* jQuery Form Submission */
-            jQuery('#form').submit(function(event) {
+        /* jQuery Form Submission */
+        jQuery('#form').submit(function (event) {
 
-                /* stop form from submitting normally */
-                event.preventDefault();
+            /* stop form from submitting normally */
+            event.preventDefault();
 
-                /* get some values from elements on the page: */
-                var $form = jQuery(this),
-                        target = $form.attr('action'),
-                        url = $form.find('input[name="url"]').val(),
-                        auth = $form.find('input[name="auth"]').is(':checked'),
-                        user = $form.find('input[name="user"]').val(),
-                        pass = $form.find('input[name="pass"]').val();
+            /* get some values from elements on the page: */
+            var $form = jQuery(this),
+                    target = $form.attr('action'),
+                    url = $form.find('input[name="url"]').val(),
+                    auth = $form.find('input[name="auth"]').is(':checked'),
+                    user = $form.find('input[name="user"]').val(),
+                    pass = $form.find('input[name="pass"]').val();
 
-                /* Send the data using post and put the results in a div */
-                jQuery.post(
-                        target,
-                        {client: client_id, url: url, auth: auth, user: user, pass: pass},
-                        function(json, status) {
-                            if(status == 'success') {
-                                jQuery('#istested').hide('fast');
-                                if(json.is_compliant) {
-                                    jQuery('#iscompliant').fadeIn('fast');
-                                } // if
-                                else {
-                                    jQuery('#isnotcompliant').fadeIn('fast');
-                                } // else
-                                var id = jQuery('#suite\\.id');
-                                id.val(json.uuid);
-                                var link = jQuery('#suite\\.link');
-                                link.attr('href', link.attr('href') + json.uuid);
+            /* Send the data using post and put the results in a div */
+            jQuery.post(
+                    target,
+                    {client:client_id, url:url, auth:auth, user:user, pass:pass},
+                    function (json, status) {
+                        if (status == 'success') {
+                            jQuery('#istested').hide('fast');
+                            if (json.is_compliant) {
+                                jQuery('#iscompliant').fadeIn('fast');
                             } // if
                             else {
-                                // TODO: error handling
+                                jQuery('#isnotcompliant').fadeIn('fast');
                             } // else
-                        }
-                );
-                jQuery('#result').fadeIn('slow');
-            });
+                            var id = jQuery('#suite\\.id');
+                            id.val(json.uuid);
+                            var link = jQuery('#suite\\.link');
+                            link.attr('href', link.attr('href') + json.uuid);
+                        } // if
+                        else {
+                            // TODO: error handling
+                        } // else
+                    }
+            );
+            jQuery('#result').fadeIn('slow');
+        });
 
-            /* authentication fieldset visibility */
-            jQuery('#needs_auth').change(function() {
-                if (jQuery(this).is(':checked')) {
-                    jQuery('#auth_details').slideDown('fast');
-                } // if
-                else {
-                    jQuery('#auth_details').slideUp('fast');
-                } // else
-            });
-
-        }
-        function onChannelMessage(m) {
-            var json = jQuery.parseJSON(m.data);
-
-            /* show table row */
-            jQuery('#' + json.name + '\\.result').slideDown('slow');
-
-            var result;
-            if (json.result) {
-                /* set result field */
-                result = jQuery('output[for="' + json.name + '"]');
-                result.val('SUCCEEDED');
-                result.addClass('occi_test_pass');
-
-                /* remove details */
-                jQuery('#' + json.name + '\\.details').remove();
+        /* authentication fieldset visibility */
+        jQuery('#needs_auth').change(function () {
+            if (jQuery(this).is(':checked')) {
+                jQuery('#auth_details').slideDown('fast');
             } // if
             else {
-                /* set result field */
-                result = jQuery('output[for="' + json.name + '"]');
-                result.val('FAILED');
-                result.addClass('occi_test_fail');
-
-                /* add details */
-                jQuery.each(json.details, function(index, detail) {
-                    var output = jQuery('<output></output>');
-                    jQuery('<dfn>' + detail.message + '</dfn>').appendTo(output);
-                    jQuery('<samp>' + detail.response + '</samp>').appendTo(output);
-                    jQuery('#' + json.name + '\\.details td').append(output);
-                });
-
-                /* make visible */
-                jQuery('#' + json.name + '\\.details').slideDown('fast');
+                jQuery('#auth_details').slideUp('fast');
             } // else
+        });
 
-            /* show overall suite details */
-            jQuery('#details').show('fast');
-        }
+    }
+    function onChannelMessage(m) {
+        var json = jQuery.parseJSON(m.data);
+
+        /* show table row */
+        jQuery('#' + json.name + '\\.result').slideDown('slow');
+
+        var result;
+        if (json.result) {
+            /* set result field */
+            result = jQuery('output[for="' + json.name + '"]');
+            result.val('SUCCEEDED');
+            result.addClass('occi_test_pass');
+
+            /* remove details */
+            jQuery('#' + json.name + '\\.details').remove();
+        } // if
+        else {
+            /* set result field */
+            result = jQuery('output[for="' + json.name + '"]');
+            result.val('FAILED');
+            result.addClass('occi_test_fail');
+
+            /* add details */
+            jQuery.each(json.details, function (index, detail) {
+                var output = jQuery('<output></output>');
+                jQuery('<dfn>' + detail.message + '</dfn>').appendTo(output);
+                jQuery('<samp>' + detail.response + '</samp>').appendTo(output);
+                jQuery('#' + json.name + '\\.details td').append(output);
+            });
+
+            /* make visible */
+            jQuery('#' + json.name + '\\.details').slideDown('fast');
+        } // else
+
+        /* show overall suite details */
+        jQuery('#details').show('fast');
+    }
 </script>
 
 </body>
