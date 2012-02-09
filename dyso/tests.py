@@ -22,7 +22,7 @@ import re
 import uuid
 
 from google.appengine.api import urlfetch
-from dyso.model import Detail
+# from dyso.model import Detail
 
 
 __URLFETCH_DEADLINE = 10
@@ -1135,5 +1135,8 @@ Computing Interface - Infrastructure specification.
                 passed = _create_details(test, 'Infrastructure model is missing "snapshot" action definition.')
 
     return passed
+
+elemente = globals().copy()
+available_functions = [elemente[f] for f in elemente if f.startswith("ctf_")]
 
  # eof

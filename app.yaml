@@ -16,9 +16,14 @@
 # along with doyouspeakOCCI.  If not, see <http://www.gnu.org/licenses/>.
 
 application: doyouspeakocci
-version: 2
-runtime: python
+version: 3
+runtime: python27
 api_version: 1
+threadsafe: false
+
+libraries:
+- name: django
+  version: "1.2"
 
 handlers:
 - url: /favicon\.ico
@@ -33,9 +38,12 @@ handlers:
   static_dir: static
 
 - url: /.*
-  script: dyso/app.py
+  script: dyso.dyso.app
 
-builtins:
-- datastore_admin: on
+#inbound_services:
+#- channel_presence
+
+#builtins:
+#- datastore_admin: on
 
 # eof

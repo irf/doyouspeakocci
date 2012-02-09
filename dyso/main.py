@@ -16,17 +16,18 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with doyouspeakOCCI.  If not, see <http://www.gnu.org/licenses/>.
-import base64
-from google.appengine.api.datastore import Key
-from google.appengine.dist import use_library
-use_library('django', '1.2')
+import datetime
 
-import logging
+#from google.appengine.dist import use_library
+
+#use_library('django', '1.2')
+
+import base64
 import os
 import uuid
 
-from dyso import tests
-from dyso.model import Suite, Test
+import tests
+from model import Suite, Test
 
 from django.utils import simplejson
 
@@ -46,25 +47,28 @@ class MainPage(webapp.RequestHandler):
         client = uuid.uuid4().__str__()
         token = channel.create_channel(client)
 
-        running_since = Suite.all().order('date').get().date
+        try:
+            running_since = Suite.all().order('date').get().date
+        except:
+            running_since = datetime.date
+
         number_of_runs = Suite.all().count()
 
-        tests = {}
+        t = {}
         # run the test suite
-        for elem in dir(tests):
-            if elem.find('ctf_') != -1:
-                func = getattr(tests, elem)
-                tests[func.__name__] = func.__doc__.strip()
+        for elem in tests.available_functions:
+            t[elem.__name__] = elem.__doc__.strip()
 
         template_values = {
             'client': client,
             'token': token,
             'number_of_runs': number_of_runs,
             'running_since': running_since,
-            'tests': tests,
+            'tests': t,
             }
 
         path = os.path.join(os.path.dirname(__file__), '../templates/index.html')
+        #path = 'templates/index.html'
         self.response.out.write(template.render(path, template_values))
 
     def post(self):
@@ -108,8 +112,8 @@ class MainPage(webapp.RequestHandler):
         #channel.send_message(self.request.get('client'), simplejson.dumps(suite.to_dict()))
 
         self.response.set_status(202)
-        self.response.headers['Content-type'] = 'application/json'
-        self.response.headers.add_header('Location', self.request.url + '/archive/' + suite.key().name())
+        self.response.headers['Content-type'] = str('application/json')
+        self.response.headers.add_header(str('Location'), str(self.request.url + '/archive/' + suite.key().name()))
         self.response.out.write(simplejson.dumps(suite.to_dict()))
 
 

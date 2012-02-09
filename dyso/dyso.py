@@ -17,6 +17,17 @@
 # You should have received a copy of the GNU General Public License
 # along with doyouspeakOCCI.  If not, see <http://www.gnu.org/licenses/>.
 
-webapp_django_version = '1.2'
+from main import MainPage
+from statistics import StatisticsPage
+
+import webapp2
+
+
+app = webapp2.WSGIApplication([
+    ('/', MainPage),
+    ('/statistics', StatisticsPage),
+], debug=True
+)
+
 
 # eof

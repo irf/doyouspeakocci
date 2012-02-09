@@ -40,8 +40,10 @@
         <ul>
             <li>Welcome</li>
             <li>|</li>
+            <!--
             <li><a href="/statistics">Statistics</a></li>
             <li>|</li>
+            -->
             <li><a href="/about">About</a></li>
         </ul>
     </nav>
@@ -76,7 +78,7 @@
     </header>
 
     <section id="slogan">
-        Proudly serving the community since <date>{{ running_since|date:"F j, Y" }}</date>,
+        Proudly serving the community since <date>{{ running_since.date|date:"F j, Y" }}</date>,
         with {{ number_of_runs }} tests so far.
     </section>
     <section id="query">
