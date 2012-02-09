@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 # $Id$
 
+# Copyright (c) 2011, 2012 Technische Universität Dortmund
+#
 # This file is part of doyouspeakOCCI.
 #
 # doyouspeakOCCI is free software: you can redistribute it and/or modify
@@ -16,9 +18,9 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with doyouspeakOCCI.  If not, see <http://www.gnu.org/licenses/>.
-import uuid
 
 from google.appengine.ext import db
+
 
 class Suite(db.Model):
     """

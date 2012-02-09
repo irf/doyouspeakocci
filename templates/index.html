@@ -2,6 +2,8 @@
 <!-- $Id$ -->
 <!DOCTYPE html>
 <!--
+  -- Copyright (c) 2011, 2012 Technische Universität Dortmund
+  --
   -- This file is part of doyouspeakOCCI.
   --
   -- doyouspeakOCCI is free software: you can redistribute it and/or modify
@@ -21,7 +23,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <meta name="description"
-          content="A compliance testing application for the Open Cloud Computing Interface family of specifications. Written in Python (mainly using httplib2 and django) it is designed to run in Google App Engine."/>
+          content="A compliance testing application for the Open Cloud Computing Interface family of specifications designed to run on Google App Engine."/>
     <meta name="author" content="Alexander Papaspyrou, Technische Universität Dortmund"/>
     <meta name="keywords"
           content="doyouspeakOCCI, do you speak OCCI?, Open Cloud Computing Interface, OCCI, Compliance, Standards, Open Grid Forum">
@@ -40,8 +42,10 @@
         <ul>
             <li>Welcome</li>
             <li>|</li>
+            <!--
             <li><a href="/statistics">Statistics</a></li>
             <li>|</li>
+            -->
             <li><a href="/about">About</a></li>
         </ul>
     </nav>
@@ -76,7 +80,7 @@
     </header>
 
     <section id="slogan">
-        Proudly serving the community since <date>{{ running_since|date:"F j, Y" }}</date>,
+        Proudly serving the community since <date>{{ running_since.date|date:"F j, Y" }}</date>,
         with {{ number_of_runs }} tests so far.
     </section>
     <section id="query">

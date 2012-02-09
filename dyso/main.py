@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 # $Id$
 
+# Copyright (c) 2011, 2012 Technische Universität Dortmund
+#
 # This file is part of doyouspeakOCCI.
 #
 # doyouspeakOCCI is free software: you can redistribute it and/or modify
@@ -17,26 +19,20 @@
 # You should have received a copy of the GNU General Public License
 # along with doyouspeakOCCI.  If not, see <http://www.gnu.org/licenses/>.
 
-from google.appengine.dist import use_library
-use_library('django', '1.2')
+import tests
+import model
 
+import datetime
 import base64
-import logging
 import os
 import uuid
-
-from dyso import tests
-from dyso.model import Suite, Test
-
-from datetime import datetime
 from django.utils import simplejson
-
 from google.appengine.api.channel import channel
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 
 
-class MainPage(webapp.RequestHandler):
+class IndexPage(webapp.RequestHandler):
     """
     TODO: not yet commented.
     """
@@ -47,26 +43,24 @@ class MainPage(webapp.RequestHandler):
         client = uuid.uuid4().__str__()
         token = channel.create_channel(client)
 
-        if Suite.all().count() > 0:
-            running_since = Suite.all().order('date').get().date
-        else:
-            running_since = datetime.now()
+        try:
+            running_since = model.Suite.all().order('date').get().date
+        except AttributeError:
+            running_since = datetime.date
 
-        number_of_runs = Suite.all().count()
+        number_of_runs = model.Suite.all().count()
 
-        ctfs = {}
+        t = {}
         # run the test suite
-        for elem in dir(tests):
-            if elem.find('ctf_') != -1:
-                func = getattr(tests, elem)
-                ctfs[func.__name__] = func.__doc__.strip()
+        for ctf in tests.ctfs:
+            t[ctf.__name__] = ctf.__doc__.strip()
 
         template_values = {
             'client': client,
             'token': token,
             'number_of_runs': number_of_runs,
             'running_since': running_since,
-            'tests': ctfs,
+            'tests': t,
             }
 
         path = os.path.join(os.path.dirname(__file__), '../templates/index.html')
@@ -76,46 +70,80 @@ class MainPage(webapp.RequestHandler):
         """
         TODO: not yet commented.
         """
-        suite = Suite(key_name=uuid.uuid4().__str__())
+        suite = model.Suite(key_name=uuid.uuid4().__str__())
         suite.put()
 
         # run the test suite
         is_compliant = True
         suite.service_uri = self.request.get('url')
 
-        for elem in dir(tests):
-            if elem.find('ctf_') != -1:
-                func = getattr(tests, elem)
+        for ctf in tests.ctfs:
+            # initialize a new test object
+            test = model.Test(suite=suite)
+            test.put()
 
-                # initialize a new test object
-                test = Test(suite=suite)
-                test.put()
+            test.name = ctf.__name__
+            test.description = ctf.__doc__.strip()
 
-                test.name = func.__name__
-                test.description = func.__doc__.strip()
+            # run the individual test
+            auth = self.request.get('auth')
+            if auth:
+                token = base64.b64encode(self.request.get('user') + ':' + self.request.get('pass'))
+                test.result = ctf(test, suite.service_uri, token)
+            else:
+                test.result = ctf(test, suite.service_uri)
 
-                # run the individual test
-                auth = self.request.get('auth')
-                if auth:
-                    token = base64.b64encode(self.request.get('user') + ':' + self.request.get('pass'))
-                    test.result = func(test, suite.service_uri, token)
-                else:
-                    test.result = func(test, suite.service_uri)
+            is_compliant &= test.result
 
-                is_compliant &= test.result
-
-                # store test to database and add to result set
-                test.put()
-                channel.send_message(self.request.get('client'), simplejson.dumps(test.to_dict()))
+            # store test to database and add to result set
+            test.put()
+            channel.send_message(self.request.get('client'), simplejson.dumps(test.to_dict()))
 
         suite.is_compliant = is_compliant
         suite.put()
         #channel.send_message(self.request.get('client'), simplejson.dumps(suite.to_dict()))
 
         self.response.set_status(202)
-        self.response.headers['Content-type'] = 'application/json'
-        self.response.headers.add_header('Location', self.request.url + '/archive/' + suite.key().name())
+        self.response.headers['Content-type'] = str('application/json')
+        self.response.headers.add_header(str('Location'), str(self.request.url + '/archive/' + suite.key().name()))
         self.response.out.write(simplejson.dumps(suite.to_dict()))
+
+
+class StatisticsPage(webapp.RequestHandler):
+    """
+    TODO: not yet commented.
+    """
+
+    def get(self):
+        """
+        TODO: not yet commented.
+        """
+
+        # retrieve overall test results from datastore
+        overall = {
+            'compliant_implementations': model.Suite.all().filter('is_compliant = ', True).count(),
+            'noncompliant_implementations': model.Suite.all().filter('is_compliant = ', False).count()
+        }
+
+        # retrieve detailed test results from datastore
+        breakdown = []
+        for ctf in tests.ctfs:
+            test = {
+                'name': ctf.__name__,
+                'number_of_passes': model.Test.all().filter('name = ', ctf.__name__).filter('result = ', True).count(),
+                'number_of_fails': model.Test.all().filter('name = ', ctf.__name__).filter('result = ', False).count()
+            }
+            breakdown.append(test)
+
+        # produce template value set
+        template_values = {
+            'overall': overall,
+            'breakdown': breakdown
+        }
+
+        # render result page
+        path = os.path.join(os.path.dirname(__file__), '../templates/statistics.html')
+        self.response.out.write(template.render(path, template_values))
 
 
 # eof

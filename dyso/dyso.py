@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 # $Id$
 
+# Copyright (c) 2011, 2012 Technische Universität Dortmund
+#
 # This file is part of doyouspeakOCCI.
 #
 # doyouspeakOCCI is free software: you can redistribute it and/or modify
@@ -17,6 +19,22 @@
 # You should have received a copy of the GNU General Public License
 # along with doyouspeakOCCI.  If not, see <http://www.gnu.org/licenses/>.
 
-webapp_django_version = '1.2'
+from dyso import main
+
+import webapp2
+from google.appengine.ext.webapp.util import run_wsgi_app
+
+
+app = webapp2.WSGIApplication([
+    ('/', main.IndexPage),
+    ('/statistics', main.StatisticsPage),
+], debug=True
+)
+
+def main():
+    run_wsgi_app(app)
+
+if __name__ == "__main__":
+    main()
 
 # eof

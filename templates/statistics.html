@@ -1,9 +1,11 @@
 <?xml version="1.0" ?>
-<!-- $Id$$ -->
+<!-- $Id$ -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 
 <!--
+  -- Copyright (c) 2011, 2012 Technische Universität Dortmund
+  --
   -- This file is part of doyouspeakOCCI.
   --
   -- doyouspeakOCCI is free software: you can redistribute it and/or modify
@@ -23,7 +25,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <meta name="description"
-          content="A compliance testing application for the Open Cloud Computing Interface family of specifications. Written in Python (mainly using httplib2 and django) it is designed to run in Google App Engine."/>
+          content="A compliance testing application for the Open Cloud Computing Interface family of specifications designed to run on Google App Engine."/>
     <meta name="author" content="Alexander Papaspyrou, Technische Universität Dortmund"/>
     <meta name="keywords"
           content="doyouspeakOCCI, do you speak OCCI?, Open Cloud Computing Interface, OCCI, Compliance, Standards, Open Grid Forum">
@@ -36,6 +38,7 @@
     <!-- Google Maps -->
     <script type="text/javascript"
             src="http://maps.googleapis.com/maps/api/js?sensor=false"></script>
+
     <script type="text/javascript">
         function initialize() {
             var myOptions = {
@@ -83,21 +86,9 @@
         breakdown_data.addColumn('number', 'FAILs');
         breakdown_data.addRows({{ breakdown|length }});
         {% for test in breakdown %}
-            breakdown_data.setValue(
-                    {{ forloop.counter0 }},
-                    0,
-                    '{{ test.name }}'
-        );
-        breakdown_data.setValue(
-                {{ forloop.counter0 }},
-                1,
-                {{ test.number_of_passes }}
-        );
-        breakdown_data.setValue(
-                {{ forloop.counter0 }},
-                2,
-                {{ test.number_of_fails }}
-        );
+            breakdown_data.setValue({{ forloop.counter0 }}, 0, '{{ test.name }}');
+        breakdown_data.setValue({{ forloop.counter0 }}, 1, {{ test.number_of_passes }});
+        breakdown_data.setValue({{ forloop.counter0 }}, 2, {{ test.number_of_fails }});
         {% endfor %}
 
         // set chart options
