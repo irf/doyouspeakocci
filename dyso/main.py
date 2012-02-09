@@ -109,6 +109,31 @@ class IndexPage(webapp.RequestHandler):
         self.response.out.write(simplejson.dumps(suite.to_dict()))
 
 
+class ArchivePage(webapp.RequestHandler):
+    """
+
+    """
+
+    def get(self, suite_key):
+        if len(suite_key) > 1:
+            suite = model.Suite.get_by_key_name(suite_key[1:])
+            if suite != None:
+
+                pass
+            else:
+                self.response.set_status(404)
+                self.response.out.write()
+                pass
+
+        # produce template value set
+        template_values = {
+        }
+
+        # render result page
+        path = os.path.join(os.path.dirname(__file__), '../templates/archive.html')
+        self.response.out.write(template.render(path, template_values))
+
+
 class StatisticsPage(webapp.RequestHandler):
     """
     TODO: not yet commented.

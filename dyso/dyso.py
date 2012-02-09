@@ -21,15 +21,17 @@
 
 from dyso import main
 
-import webapp2
+from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
 
 
-app = webapp2.WSGIApplication([
-    ('/', main.IndexPage),
-    ('/statistics', main.StatisticsPage),
-], debug=True
-)
+app = webapp.WSGIApplication(
+    [
+        ('/', main.IndexPage),
+        ('/archive([/]?.*)', main.ArchivePage),
+        ('/statistics', main.StatisticsPage),
+    ],
+    debug=True)
 
 def main():
     run_wsgi_app(app)
