@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}Result for {{ suite.service_uri }}{% endblock %}
+
+{% block nav_welcome %}Welcome{% endblock %}
+
+{% block content %}
+<section id="result">
+    <p>
+        On {{ suite.date|date:"r" }}, your implementation running
+        at <blockquote id="service_url">{{ suite.service_uri }}</blockquote> turned out to be
+        {% if suite.is_compliant %}
+            <span id="iscompliant"><span class="occi_compliant">compliant</span>. Congratulations!</span>
+        {% else %}
+            <span id="isnotcompliant"><span class="occi_notcompliant">not compliant</span>.</span>
+        {% endif %}
+    </p>
+    <table id="details">
+        <thead>
+        <tr>
+            <th>Description</th>
+            <th>Result</th>
+        </tr>
+        </thead>
+        <tfoot>
+        <tr>
+            <td colspan="2">
+                <p>
+                    Suite
+                    <output id="{{ suite.uuid }}">{{ suite.uuid }}</output>
+                    (<a id="suite.link" href="/archive/{{ suite.uuid }}">permalink</a>).
+                </p>
+            </td>
+        </tr>
+        </tfoot>
+        <tbody>
+        {% for test in tests %}
+            <tr id="{{ test.name }}.result" class="{% cycle 'whiterow', 'lightgreyrow' %}">
+                <td><dfn id="{{ test.name }}">{{ test.description }}</dfn></td>
+                <td>
+                    {% if test.result %}
+                    <output for="{{ test.name }}" class="occi_test_pass">SUCCEEDED</output>
+                    {% else %}
+                    <output for="{{ test.name }}" class="occi_test_fail">FAILED</output>
+                    {% endif %}
+                </td>
+            </tr>
+            {% if test.details %}
+            <tr id="{{ test.name }}.details" class="darkgreyrow">
+                <td colspan="2">
+                    {% for detail in tests.details.items %}
+                    <output>
+                        <dfn>{{ detail.message }}</dfn>
+                        <sample>{{ detail.response }}</sample>
+                    </output>
+                    {% endfor %}
+                </td>
+            </tr>
+            {% endif %}
+        {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}

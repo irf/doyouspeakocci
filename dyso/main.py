@@ -98,7 +98,7 @@ class IndexPage(webapp.RequestHandler):
         self.response.set_status(202)
         self.response.headers['Content-type'] = str('application/json')
         self.response.headers.add_header(str('Location'), str(self.request.url + '/archive/' + suite.key().name()))
-        self.response.out.write(simplejson.dumps(suite.to_dict()))
+        self.response.out.write(simplejson.dumps(suite.to_dict(flatten_date=True)))
 
 
 class ArchivePage(webapp.RequestHandler):
@@ -107,6 +107,8 @@ class ArchivePage(webapp.RequestHandler):
     """
 
     def get(self, suite_key):
+        template_values = get_base_template()
+
         # check whether a specific suite was requested (i.e. the path contains a UUID)
         if len(suite_key) > 1: # yes: check whether the requested key exists
             suite = model.Suite.get_by_key_name(suite_key[1:])
@@ -118,9 +120,9 @@ class ArchivePage(webapp.RequestHandler):
                 path = os.path.join(os.path.dirname(__file__), '../templates/error.html')
                 self.response.out.write(template.render(path, template_values))
             else: # yes: produce template value set and render result page
-                template_values = {
+                template_values['suite'] = suite.to_dict()
+                template_values['tests'] = [t.to_dict(True) for t in suite.tests.fetch(len(tests.ctfs))]
 
-                }
                 path = os.path.join(os.path.dirname(__file__), '../templates/result.html')
                 self.response.out.write(template.render(path, template_values))
         else: # no: generate and render overview page
@@ -181,12 +183,7 @@ def get_base_template():
     """
 
     """
-    running_since = None
-    try:
-        running_since = model.Suite.all().order('date').get().date
-    except AttributeError:
-
-        pass
+    running_since = model.Suite.all().order('date').get().date
     number_of_runs = model.Suite.all().count()
 
     result = {

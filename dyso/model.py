@@ -31,10 +31,10 @@ class Suite(db.Model):
     service_uri = db.LinkProperty()
     is_compliant = db.BooleanProperty()
 
-    def to_dict(self, with_tests=False):
+    def to_dict(self, with_tests=False, flatten_date=False):
         result = {
             'uuid': self.key().name(),
-            'date': self.date.isoformat(),
+            'date': self.date.isoformat() if flatten_date else self.date,
             'service_uri': self.service_uri,
             'is_compliant': self.is_compliant
         }
