@@ -30,6 +30,7 @@ app = webapp.WSGIApplication(
         ('/', main.IndexPage),
         ('/archive([/]?.*)', main.ArchivePage),
         ('/statistics', main.StatisticsPage),
+        ('/about', main.AboutPage),
     ],
     debug=True)
 

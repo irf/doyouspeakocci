@@ -1,0 +1,105 @@
+<?xml version="1.0" ?>
+<!-- $Id$ -->
+<!DOCTYPE html>
+<!--
+  -- Copyright (c) 2011, 2012 Technische Universität Dortmund
+  --
+  -- This file is part of doyouspeakOCCI.
+  --
+  -- doyouspeakOCCI is free software: you can redistribute it and/or modify
+  -- it under the terms of the GNU General Public License as published by
+  -- the Free Software Foundation, either version 3 of the License, or
+  -- (at your option) any later version.
+  --
+  -- doyouspeakOCCI is distributed in the hope that it will be useful,
+  -- but WITHOUT ANY WARRANTY; without even the implied warranty of
+  -- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  -- GNU General Public License for more details.
+  --
+  -- You should have received a copy of the GNU General Public License
+  -- along with doyouspeakOCCI.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="description"
+          content="A compliance testing application for the Open Cloud Computing Interface family of specifications designed to run on Google App Engine."/>
+    <meta name="author" content="{% block author %}Alexander Papaspyrou, Technische Universität Dortmund"{% endblock %}/>
+    <meta name="keywords"
+          content="doyouspeakOCCI, do you speak OCCI?, Open Cloud Computing Interface, OCCI, Compliance, Standards, Open Grid Forum">
+    <title>doyouspeakOCCI :: {% block title %}Welcome{% endblock %}</title>
+
+    <link rel="stylesheet" type="text/css" href="/static/stylesheet.css">
+    <link rel="stylesheet" type="text/css"
+          href="http://fonts.googleapis.com/css?family=Forum|Mako|Special+Elite|Ubuntu+Mono">
+
+    <script src="http://code.jquery.com/jquery-latest.js"></script>
+
+    <!-- scripting -->
+    <script type="text/javascript">
+        /* ensure explicit referencing of jQuery calls */
+        jQuery.noConflict();
+    </script>
+    {%  block scripting %}
+    <script type="text/javascript">
+        function initialize() {}
+    </script>
+    {% endblock %}
+
+</head>
+
+<body onload="initialize()">
+<nav id="navigation">
+    <ul>
+        <li>{% block nav_welcome %}<a href="/">Welcome</a>{% endblock %}</li>
+        <li>|</li>
+        <!--
+        <li>{% block nav_statistics %}<a href="/statistics">"Statistics</a>{% endblock %}</li>
+        <li>|</li>
+        -->
+        <li>{% block nav_about %}<a href="/about">About</a>{% endblock %}</li>
+    </ul>
+</nav>
+
+<header id="text">
+        <span class="doyouspeaklight"
+              lang="bg">говорители</span><span
+        class="doyouspeakdark"
+        lang="de">sprechensie</span><span
+        class="doyouspeaklight"
+        lang="fr">parle<br/>zvous</span><span
+        class="doyouspeakdark"
+        lang="el">μιλάτε</span><span
+        class="doyouspeaklight"
+        lang="ga">labhraíonntú</span><span
+        class="doyouspeakdark"
+        lang="it">parl<br/>i</span><span
+        class="doyouspeaklight"
+        lang="la">loqueris</span><span
+        class="doyouspeakdark"
+        lang="nl">spreekje</span><span
+        class="doyouspeaklight"
+        lang="sv">talardu</span><span
+        class="doyouspeakdark"
+        lang="es">esuste<br/>dhabla</span><span
+        class="doyouspeaklight"
+        lang="en">doyouspeak</span><span
+        class="occi">OCCI?</span>
+</header>
+<header id="picture">
+    <img src="/static/images/logo.png" width="250px"/>
+</header>
+
+<section id="slogan">
+    Proudly serving the community since
+    <date>{% if running_since %}{{ running_since|date:"F j, Y" }}{% else %}{% now "F j, Y" %}{% endif %}</date>;
+    with {{ number_of_runs|default:"0" }} tests so far.
+</section>
+
+{% block content %}{% endblock %}
+
+<footer>&nbsp;</footer>
+
+</body>
+</html>

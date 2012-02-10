@@ -1,101 +1,10 @@
-<?xml version="1.0" ?>
-<!-- $Id$$ -->
-<!DOCTYPE html>
+{% extends 'base.html' %}
 
-<!--
-  -- Copyright (c) 2011, 2012 Technische Universität Dortmund
-  --
-  -- This file is part of doyouspeakOCCI.
-  --
-  -- doyouspeakOCCI is free software: you can redistribute it and/or modify
-  -- it under the terms of the GNU General Public License as published by
-  -- the Free Software Foundation, either version 3 of the License, or
-  -- (at your option) any later version.
-  --
-  -- doyouspeakOCCI is distributed in the hope that it will be useful,
-  -- but WITHOUT ANY WARRANTY; without even the implied warranty of
-  -- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  -- GNU General Public License for more details.
-  --
-  -- You should have received a copy of the GNU General Public License
-  -- along with doyouspeakOCCI.  If not, see <http://www.gnu.org/licenses/>.
-  -->
+{% block title %}Welcome{% endblock %}
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-    <meta name="description"
-          content="A compliance testing application for the Open Cloud Computing Interface family of specifications designed to run on Google App Engine."/>
-    <meta name="author" content="Alexander Papaspyrou, Technische Universität Dortmund"/>
-    <meta name="keywords"
-          content="doyouspeakOCCI, do you speak OCCI?, Open Cloud Computing Interface, OCCI, Compliance, Standards, Open Grid Forum">
-    <title>doyouspeakOCCI :: About</title>
+{% block nav_about %}About{% endblock %}
 
-    <link rel="stylesheet" type="text/css" href="/static/stylesheet.css">
-    <link rel="stylesheet" type="text/css"
-          href="http://fonts.googleapis.com/css?family=Forum|Mako|Special+Elite|Ubuntu+Mono">
-
-    <script type="text/javascript">
-        function initialize() {
-            showHideAuth();
-        }
-        function showHideAuth() {
-            if (document.getElementById('needs_auth').checked) {
-                document.getElementById('auth_details').style.display = 'block';
-            }
-            else {
-                document.getElementById('auth_details').style.display = 'none';
-            }
-        }
-    </script>
-
-</head>
-<body onload="initialize()">
-<nav id="navigation">
-    <ul>
-        <li><a href="/">Welcome</a></li>
-        <li>|</li>
-        <li><a href="/statistics">Statistics</a></li>
-        <li>|</li>
-        <li>About</li>
-    </ul>
-</nav>
-
-<header id="text">
-        <span class="doyouspeaklight"
-              lang="bg">говорители</span><span
-        class="doyouspeakdark"
-        lang="de">sprechensie</span><span
-        class="doyouspeaklight"
-        lang="fr">parle<br/>zvous</span><span
-        class="doyouspeakdark"
-        lang="el">μιλάτε</span><span
-        class="doyouspeaklight"
-        lang="ga">labhraíonntú</span><span
-        class="doyouspeakdark"
-        lang="it">parl<br/>i</span><span
-        class="doyouspeaklight"
-        lang="la">loqueris</span><span
-        class="doyouspeakdark"
-        lang="nl">spreekje</span><span
-        class="doyouspeaklight"
-        lang="sv">talardu</span><span
-        class="doyouspeakdark"
-        lang="es">esuste<br/>dhabla</span><span
-        class="doyouspeaklight"
-        lang="en">doyouspeak</span><span
-        class="occi">OCCI?</span>
-</header>
-<header id="picture">
-    <img src="/static/images/logo.png" width="250px"/>
-</header>
-
-<section id="slogan">
-    Proudly serving the community since
-    <date>{{ running_since.date|date:"F j, Y" }}</date>
-    ,
-    with {{ number_of_runs }} tests so far.
-</section>
-
+{% block content %}
 <section id="description">
     <p>The doyouspeakOCCI Compliance Testing Facility is a <a href="http://code.google.com/appengine/">Google App Engine
         (GAE)</a>-based checking tool for the <a href="http://occi-wg.org/">Open Cloud Computing Interface (OCCI)</a>
@@ -180,8 +89,4 @@
         patch, and send us a <a href="http://help.github.com/send-pull-requests/">pull request</a> —we will then have a
         look at it. Remember to add a link to the issue you aim to fix.</p>
 </section>
-
-<footer>&nbsp;</footer>
-
-</body>
-</html>
+{% endblock %}

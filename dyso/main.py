@@ -40,29 +40,21 @@ class IndexPage(webapp.RequestHandler):
         """
         TODO: not yet commented.
         """
-        client = uuid.uuid4().__str__()
-        token = channel.create_channel(client)
+        template_values = get_base_template()
 
-        try:
-            running_since = model.Suite.all().order('date').get().date
-        except AttributeError:
-            running_since = datetime.date
+        # generate and retain client id for inbound AJAX channel
+        template_values['client'] = uuid.uuid4().__str__()
 
-        number_of_runs = model.Suite.all().count()
+        # create channel and retain security token
+        template_values['token'] = channel.create_channel(template_values['client'])
 
-        t = {}
-        # run the test suite
+        ctfs = {}
+        # extract ctf name and descriptions
         for ctf in tests.ctfs:
-            t[ctf.__name__] = ctf.__doc__.strip()
+            ctfs[ctf.__name__] = ctf.__doc__.strip()
+        template_values['tests'] = ctfs
 
-        template_values = {
-            'client': client,
-            'token': token,
-            'number_of_runs': number_of_runs,
-            'running_since': running_since,
-            'tests': t,
-            }
-
+        # load and render result page
         path = os.path.join(os.path.dirname(__file__), '../templates/index.html')
         self.response.out.write(template.render(path, template_values))
 
@@ -115,23 +107,28 @@ class ArchivePage(webapp.RequestHandler):
     """
 
     def get(self, suite_key):
-        if len(suite_key) > 1:
+        # check whether a specific suite was requested (i.e. the path contains a UUID)
+        if len(suite_key) > 1: # yes: check whether the requested key exists
             suite = model.Suite.get_by_key_name(suite_key[1:])
-            if suite != None:
+            if suite is None: # no: generate and render error page
+                template_values = {
 
-                pass
-            else:
+                }
                 self.response.set_status(404)
-                self.response.out.write()
-                pass
+                path = os.path.join(os.path.dirname(__file__), '../templates/error.html')
+                self.response.out.write(template.render(path, template_values))
+            else: # yes: produce template value set and render result page
+                template_values = {
 
-        # produce template value set
-        template_values = {
-        }
+                }
+                path = os.path.join(os.path.dirname(__file__), '../templates/result.html')
+                self.response.out.write(template.render(path, template_values))
+        else: # no: generate and render overview page
+            template_values = {
 
-        # render result page
-        path = os.path.join(os.path.dirname(__file__), '../templates/archive.html')
-        self.response.out.write(template.render(path, template_values))
+            }
+            path = os.path.join(os.path.dirname(__file__), '../templates/archive.html')
+            self.response.out.write(template.render(path, template_values))
 
 
 class StatisticsPage(webapp.RequestHandler):
@@ -143,9 +140,10 @@ class StatisticsPage(webapp.RequestHandler):
         """
         TODO: not yet commented.
         """
+        template_values = get_base_template()
 
         # retrieve overall test results from datastore
-        overall = {
+        template_values['overall'] = {
             'compliant_implementations': model.Suite.all().filter('is_compliant = ', True).count(),
             'noncompliant_implementations': model.Suite.all().filter('is_compliant = ', False).count()
         }
@@ -159,16 +157,43 @@ class StatisticsPage(webapp.RequestHandler):
                 'number_of_fails': model.Test.all().filter('name = ', ctf.__name__).filter('result = ', False).count()
             }
             breakdown.append(test)
+        template_values['breakdown'] = breakdown
 
-        # produce template value set
-        template_values = {
-            'overall': overall,
-            'breakdown': breakdown
-        }
-
-        # render result page
+        # load and render result page
         path = os.path.join(os.path.dirname(__file__), '../templates/statistics.html')
         self.response.out.write(template.render(path, template_values))
+
+
+class AboutPage(webapp.RequestHandler):
+    """
+
+    """
+
+    def get(self):
+        template_values = get_base_template()
+
+        # load and render result page
+        path = os.path.join(os.path.dirname(__file__), '../templates/about.html')
+        self.response.out.write(template.render(path, template_values))
+
+
+def get_base_template():
+    """
+
+    """
+    running_since = None
+    try:
+        running_since = model.Suite.all().order('date').get()
+    except AttributeError:
+        pass
+    number_of_runs = model.Suite.all().count()
+
+    result = {
+        'number_of_runs': number_of_runs,
+        'running_since': running_since,
+    }
+
+    return result
 
 
 # eof
