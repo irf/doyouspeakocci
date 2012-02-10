@@ -183,8 +183,9 @@ def get_base_template():
     """
     running_since = None
     try:
-        running_since = model.Suite.all().order('date').get()
+        running_since = model.Suite.all().order('date').get().date
     except AttributeError:
+
         pass
     number_of_runs = model.Suite.all().count()
 
