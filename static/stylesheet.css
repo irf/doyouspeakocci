@@ -76,11 +76,16 @@ input#service_url {
 }
 
 nav {
-    top: 2em;
-    padding: 1em;
-    font-family: Mako, Helvetica, sans-serif;
-    text-align: center;
     border-bottom: 1px solid #CCCCCC;
+    font-family: Mako, Helvetica, sans-serif;
+    margin: 0em;
+    padding: 1em;
+    text-align: center;
+    top: 2em;
+}
+
+nav ul {
+    list-style-type: none;
 }
 
 nav ul li {
@@ -153,6 +158,11 @@ td {
 .occi_test_fail {
     font-variant: small-caps;
     color: maroon;
+}
+
+.user_welcome{
+    font-style: italic;
+    color: #CC0000
 }
 
 .test_description{

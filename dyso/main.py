@@ -22,11 +22,11 @@
 import tests
 import model
 
-import datetime
 import base64
 import os
 import uuid
 from django.utils import simplejson
+from google.appengine.api import users
 from google.appengine.api.channel import channel
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
@@ -40,7 +40,7 @@ class IndexPage(webapp.RequestHandler):
         """
         TODO: not yet commented.
         """
-        template_values = get_base_template()
+        template_values = get_base_template(self.request.path)
 
         # generate and retain client id for inbound AJAX channel
         template_values['client'] = uuid.uuid4().__str__()
@@ -103,19 +103,21 @@ class IndexPage(webapp.RequestHandler):
 
 class ArchivePage(webapp.RequestHandler):
     """
-
+    TODO: not yet commented.
     """
 
     def get(self, suite_key):
-        template_values = get_base_template()
+        """
+        TODO: not yet commented.
+        """
+        template_values = get_base_template(self.request.path)
+        user = users.get_current_user()
 
         # check whether a specific suite was requested (i.e. the path contains a UUID)
         if len(suite_key) > 1: # yes: check whether the requested key exists
+            # TODO: implement user check
             suite = model.Suite.get_by_key_name(suite_key[1:])
             if suite is None: # no: generate and render error page
-                template_values = {
-
-                }
                 self.response.set_status(404)
                 path = os.path.join(os.path.dirname(__file__), '../templates/error.html')
                 self.response.out.write(template.render(path, template_values))
@@ -126,9 +128,12 @@ class ArchivePage(webapp.RequestHandler):
                 path = os.path.join(os.path.dirname(__file__), '../templates/result.html')
                 self.response.out.write(template.render(path, template_values))
         else: # no: generate and render overview page
-            template_values = {
+            if user:
+                template_values['number_of_records'] = 0
+                # TODO: implement per-user output of data
+            else:
+                template_values['number_of_records'] = 0
 
-            }
             path = os.path.join(os.path.dirname(__file__), '../templates/archive.html')
             self.response.out.write(template.render(path, template_values))
 
@@ -142,7 +147,7 @@ class StatisticsPage(webapp.RequestHandler):
         """
         TODO: not yet commented.
         """
-        template_values = get_base_template()
+        template_values = get_base_template(self.request.path)
 
         # retrieve overall test results from datastore
         template_values['overall'] = {
@@ -172,24 +177,32 @@ class AboutPage(webapp.RequestHandler):
     """
 
     def get(self):
-        template_values = get_base_template()
+        """
+
+        """
+        template_values = get_base_template(self.request.path)
 
         # load and render result page
         path = os.path.join(os.path.dirname(__file__), '../templates/about.html')
         self.response.out.write(template.render(path, template_values))
 
 
-def get_base_template():
+def get_base_template(path):
     """
 
     """
-    running_since = model.Suite.all().order('date').get().date
-    number_of_runs = model.Suite.all().count()
+    result = {}
 
-    result = {
-        'number_of_runs': number_of_runs,
-        'running_since': running_since,
-    }
+    user = users.get_current_user()
+    if user:
+        result['userid'] = user.nickname()
+        result['logout_url'] = users.create_logout_url(dest_url=path)
+    else:
+        result['login_url_google'] = users.create_login_url(dest_url=path, federated_identity='google.com/accounts/o8/id')
+        result['login_url_yahoo'] = users.create_login_url(dest_url=path, federated_identity='yahoo.com')
+
+    result['running_since'] = model.Suite.all().order('date').get().date
+    result['number_of_runs'] = model.Suite.all().count()
 
     return result
 

@@ -35,30 +35,51 @@
           href="http://fonts.googleapis.com/css?family=Forum|Mako|Special+Elite|Ubuntu+Mono">
 
     <script src="http://code.jquery.com/jquery-1.7.1.js"></script>
+    <script src="http://cdn.jquerytools.org/1.2.6/jquery.tools.min.js"></script>
 
     <!-- scripting -->
-    <script type="text/javascript">
-        /* ensure explicit referencing of jQuery calls */
-        jQuery.noConflict();
-    </script>
     {%  block scripting %}
     <script type="text/javascript">
         function initialize() {}
     </script>
     {% endblock %}
+    <script type="text/javascript">
+        /* ensure explicit referencing of jQuery calls */
+        jQuery.noConflict();
+        jQuery(document).ready(onReady);
+        
+        function onReady() {
+            jQuery('#login_openid').tooltip()
+            // execute initialization from inheriting templates
+            initialize();
+        }
+    </script>
 
 </head>
 
-<body onload="initialize()">
+<body>
 <nav id="navigation">
     <ul>
         <li>{% block nav_welcome %}<a href="/">Welcome</a>{% endblock %}</li>
-        <li>|</li>
+        <li>☵</li>
+        <li>{% block nav_archive %}<a href="/archive">Archive</a>{% endblock %}</li>
+        <li>☵</li>
         <!--
         <li>{% block nav_statistics %}<a href="/statistics">"Statistics</a>{% endblock %}</li>
         <li>|</li>
         -->
         <li>{% block nav_about %}<a href="/about">About</a>{% endblock %}</li>
+        <li></li>
+        {% if userid %}
+        <li><span class="user_welcome">Hello, {{ userid }}.</span>&nbsp;<a href="{{ logout_url }}">logout</a></li>
+        {% else %}
+        <li>
+            <span class="user_welcome">Hello, stranger.</span>
+            &nbsp;
+            <a href="{{ login_url_google }}"><img src="/static/images/idps/google.png" alt="Login with Google" title="Login with Google" /></a>
+            <a href="{{ login_url_yahoo }}"><img src="/static/images/idps/yahoo.png" alt="Login with Yahoo!" title="Login with Yahoo!" /></a>
+        </li>
+        {% endif %}
     </ul>
 </nav>
 

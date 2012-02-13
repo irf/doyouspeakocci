@@ -8,9 +8,6 @@
 
         var client_id = '{{ client }}';
 
-        /* ensure explicit referencing of jQuery calls */
-        jQuery.noConflict();
-
         function initialize() {
             /* Google App Engine Channel API */
             var channel = new goog.appengine.Channel('{{ token }}');
@@ -162,7 +159,7 @@
                 <p>
                     Suite
                     <output id="suite.id"></output>
-                    (<a id="suite.link" href="http://doyouspeakocci.appspot.com/archive/">permalink</a>).
+                    (<a id="suite.link" href="/archive/">permalink</a>).
                 </p>
             </td>
         </tr>

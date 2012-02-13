@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}Welcome{% endblock %}
+
+{% block scripting %}
+{% endblock %}
+
+{% block nav_archive %}Archive{% endblock %}
+
+{% block content %}
+    <section id="archive">
+        <p>
+            {% if userid %}
+                {% ifequal number_of_records 0 %}
+                    Sorry, but I have no records for you. Please go to the <a href="/">main page</a>, and run a test on your OCCI service first.
+                {% else %}
+                    Welcome back! So far, I have {{ number_of_records|default_if_none:'no' }} records for you.<br/>Please take a look below.
+                {% endifequal %}
+            {% else %}
+                Sorry, but I don't know you. You have to <a href="{{ login_url }}">login</a> before I can tell you whether I have any records for you.
+            {% endif %}
+        </p>
+        <table id="details" {% if not userid or number_of_records < 1 %}style="display: none;"{% endif %}>
+            <thead>
+            <tr>
+                <th>Date</th>
+                <th>Result</th>
+                <th>Details</th>
+            </tr>
+            </thead>
+            <tfoot>
+            <tr>
+                <td colspan="2">
+                    <p>
+                        Out of {{ number_of_records }} runs, {{ succeeded_runs }} were successful.
+                    </p>
+                </td>
+            </tr>
+            </tfoot>
+            <tbody>
+            {% for suite in suites %}
+                <tr id="{{ suite.uuid }}.result" class="{% cycle 'whiterow', 'lightgreyrow' %}">
+                    <td><date>{{ suite.date|date:"r" }}</date></td>
+                    <td>
+                    {% if suite.is_compliant%}
+                        <output for="{{ suite.uuid }}" class="occi_test_pass">Compliant</output>
+                    {% else %}
+                        <output for="{{ suite.uuid }}" class="occi_test_fail">Not compliant</output>
+                    {% endif %}
+                    </td>
+                    <td><dfn id="{{ suite.uuid }}"><a href="/archive/{{ suite.uuid }}">Details ({{ suite.uuid }})</a></dfn></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </section>
+{% endblock %}
