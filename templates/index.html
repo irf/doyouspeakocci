@@ -3,6 +3,7 @@
 {% block title %}Welcome{% endblock %}
 
 {% block scripting %}
+    <script src="/static/scripts/jquery-tools-1.2.6.js"></script>
     <script type="text/javascript" src="/_ah/channel/jsapi"></script>
     <script type="text/javascript">
 
@@ -123,7 +124,7 @@
         <fieldset id="service_details">
             <label for="service_url">Service URL:</label>
             <input id="service_url" type="url"
-                   name="url" placeholder="http://example.com/occi" required="required" autofocus="autofocus"/>
+                   name="url" placeholder="http://example.com/occi" pattern="https?://.+" required="required" autofocus="autofocus"/>
             <label for="needs_auth">Requires Authentication</label>
             <input id="needs_auth" type="checkbox"
                    name="auth" value="needs_auth"/>

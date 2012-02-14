@@ -35,7 +35,6 @@
           href="http://fonts.googleapis.com/css?family=Forum|Mako|Special+Elite|Ubuntu+Mono">
 
     <script src="http://code.jquery.com/jquery-1.7.1.js"></script>
-    <script src="http://cdn.jquerytools.org/1.2.6/jquery.tools.min.js"></script>
 
     <!-- scripting -->
     {%  block scripting %}
@@ -49,7 +48,6 @@
         jQuery(document).ready(onReady);
         
         function onReady() {
-            jQuery('#login_openid').tooltip()
             // execute initialization from inheriting templates
             initialize();
         }

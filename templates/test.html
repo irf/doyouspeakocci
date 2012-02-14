@@ -33,6 +33,25 @@
     <title>do you speak OCCI? Compliance Testing for the Open Cloud Computing Interface: Statistics</title>
 
     <meta charset="UTF-8">
+
+    <script src="http://cdn.jquerytools.org/1.2.6/jquery.tools.min.js"></script>
+
+    <style type="text/css">
+        .tooltip {
+            display:none;
+            background:transparent url(http://localhost:8080/static/images/tooltips/black_arrow_bottom.png);
+            font-size:12px;
+            height:70px;
+            width:160px;
+            padding:25px;
+            color:#fff;
+        }
+    </style>
+
+    <script type="text/javascript">
+        jQuery(document).ready(function() {jQuery("#implementation_map").tooltip();});
+    </script>
+
 </head>
 <body>
 <li>
@@ -43,7 +62,7 @@
 </li>
 <h1>Locations of Tested Implementations</h1>
 
-<div id="implementation_map" style="height: 400px;"></div>
+<div id="implementation_map" style="height: 400px;" title="Hello, tooltip."></div>
 
 <h2>Overall Implementation Compliance Results</h2>
 </body>

@@ -32,6 +32,10 @@ body {
     width: 800px;
 }
 
+button:invalid {
+    text-decoration: line-through;
+}
+
 code {
     background-color: #CCCCCC;
     border: 1px #666666;
@@ -69,6 +73,12 @@ header#picture {
 
 fieldset#service_details * {
     font-size: 18px;
+}
+
+input:required:invalid, input:focus:invalid {
+    background-image: url(/static/images/prohibited.png);
+    background-position: right center;
+    background-repeat: no-repeat;
 }
 
 input#service_url {

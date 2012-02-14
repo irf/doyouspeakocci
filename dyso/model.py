@@ -28,6 +28,7 @@ class Suite(db.Model):
     TODO: not yet documented.
     """
     date = db.DateTimeProperty(auto_now_add=True)
+    user = db.UserProperty()
     service_uri = db.LinkProperty()
     is_compliant = db.BooleanProperty()
 

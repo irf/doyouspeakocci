@@ -63,6 +63,11 @@ class IndexPage(webapp.RequestHandler):
         TODO: not yet commented.
         """
         suite = model.Suite(key_name=uuid.uuid4().__str__())
+
+        user = users.get_current_user()
+        if user:
+            suite.user = user
+
         suite.put()
 
         # run the test suite
@@ -115,7 +120,6 @@ class ArchivePage(webapp.RequestHandler):
 
         # check whether a specific suite was requested (i.e. the path contains a UUID)
         if len(suite_key) > 1: # yes: check whether the requested key exists
-            # TODO: implement user check
             suite = model.Suite.get_by_key_name(suite_key[1:])
             if suite is None: # no: generate and render error page
                 self.response.set_status(404)
@@ -129,8 +133,9 @@ class ArchivePage(webapp.RequestHandler):
                 self.response.out.write(template.render(path, template_values))
         else: # no: generate and render overview page
             if user:
-                template_values['number_of_records'] = 0
-                # TODO: implement per-user output of data
+                template_values['number_of_records'] = model.Suite.all().filter('user', user).count()
+                template_values['succeeded_runs'] = model.Suite.all().filter('user', user).filter('is_compliant', True).count()
+                template_values['suites'] = model.Suite.all().filter('user', user).order('-date')
             else:
                 template_values['number_of_records'] = 0
 
@@ -201,7 +206,9 @@ def get_base_template(path):
         result['login_url_google'] = users.create_login_url(dest_url=path, federated_identity='google.com/accounts/o8/id')
         result['login_url_yahoo'] = users.create_login_url(dest_url=path, federated_identity='yahoo.com')
 
-    result['running_since'] = model.Suite.all().order('date').get().date
+    running_since = model.Suite.all().order('date').get()
+    if running_since:
+        result['running_since'] = running_since.date
     result['number_of_runs'] = model.Suite.all().count()
 
     return result

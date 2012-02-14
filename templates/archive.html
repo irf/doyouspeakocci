@@ -32,14 +32,15 @@
             <tr>
                 <td colspan="2">
                     <p>
-                        Out of {{ number_of_records }} runs, {{ succeeded_runs }} were successful.
+                        Out of {{ number_of_records }} runs,
+                        {{ succeeded_runs }} {% ifequal succeeded_runs 1 %}was{% else %}were{% endifequal %} successful.
                     </p>
                 </td>
             </tr>
             </tfoot>
             <tbody>
             {% for suite in suites %}
-                <tr id="{{ suite.uuid }}.result" class="{% cycle 'whiterow', 'lightgreyrow' %}">
+                <tr id="{{ suite.key }}.result" class="{% cycle 'whiterow', 'lightgreyrow' %}">
                     <td><date>{{ suite.date|date:"r" }}</date></td>
                     <td>
                     {% if suite.is_compliant%}
@@ -48,7 +49,7 @@
                         <output for="{{ suite.uuid }}" class="occi_test_fail">Not compliant</output>
                     {% endif %}
                     </td>
-                    <td><dfn id="{{ suite.uuid }}"><a href="/archive/{{ suite.uuid }}">Details ({{ suite.uuid }})</a></dfn></td>
+                    <td><dfn id="{{ suite.key }}"><a href="/archive/{{ suite.key.name }}">{{ suite.key.name }}</a></dfn></td>
                 </tr>
             {% endfor %}
             </tbody>
