@@ -17,7 +17,7 @@
                     Welcome back! So far, I have {{ number_of_records|default_if_none:'no' }} records for you.<br/>Please take a look below.
                 {% endifequal %}
             {% else %}
-                Sorry, but I don't know you. You have to <a href="{{ login_url }}">login</a> before I can tell you whether I have any records for you.
+                Sorry, but I don't know you. You have to login (on the top right of the page) before I can tell you whether I have any records for you.
             {% endif %}
         </p>
         <table id="details" {% if not userid or number_of_records < 1 %}style="display: none;"{% endif %}>
