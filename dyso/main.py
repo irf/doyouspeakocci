@@ -86,7 +86,8 @@ class IndexPage(webapp.RequestHandler):
             auth = self.request.get('auth')
             if auth:
                 token = base64.b64encode(self.request.get('user') + ':' + self.request.get('pass'))
-                test.result = ctf(test, suite.service_uri, token)
+                # XXX: add better handling for HTTP Basic Auth
+                test.result = ctf(test, suite.service_uri, 'Basic ' + token)
             else:
                 test.result = ctf(test, suite.service_uri)
 
